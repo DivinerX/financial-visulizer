@@ -1,19 +1,40 @@
 import argparse
+import csv
 import numpy as np
 import pandas as pd
 
 
-def organize_files(*args):
+def organize_files(exceptions_file, *args):
     # Read and concatenate files into single dataframe.
     raw_df = pd.concat(map(pd.read_csv, *args))
-    trimmed_df = pd.DataFrame(raw_df, columns = ['Posting Date', 'Amount'])
     if debug:
         # Can't use a starred expression in fstrings so I used format this time.
         print('Files given: {}'.format(*args))
         print(f'Raw dataframe:\n{raw_df}\n')
+    filtered_df = remove_exceptions(exceptions_file, raw_df)
+    trimmed_df = pd.DataFrame(filtered_df, columns = ['Posting Date', 'Amount'])
+    if debug:
         print(f'Trimmed dataframe:\n{trimmed_df}\n')
     income = organize_income(trimmed_df)
     expenses = organize_expenses(trimmed_df)
+
+def remove_exceptions(exceptions_file, raw_df):
+    exceptions = []
+    with open(exceptions_file, newline='') as f:
+        lines = csv.reader(f)
+        iterlines = iter(lines)
+        for line in iterlines:
+            # Get the exception from each line.
+            exceptions.append(line[0].strip())
+    if debug:
+        print(f'Exceptions: {exceptions}')
+    for exception in exceptions:
+        if debug:
+            # Print the rows about to be removed from the dataframe.
+            print(raw_df[raw_df['Extended Description'].str.contains(exception)])
+        # Rewrite the dataframe with the rows containing exceptions now removed.
+        raw_df = raw_df[~raw_df['Extended Description'].str.contains(exception)]
+    return raw_df
 
 def organize_income(df):
     income = df.copy()
@@ -57,11 +78,15 @@ def main():
                                                                     output.')
     parser.add_argument('-f', '--files', nargs='*', required=True,
                         help='CSV file(s) containing finances.')
+    parser.add_argument('-e', '--exceptions', help='A CSV of newline separated \
+                                                    descriptions that if found \
+                                                    will get removed from the \
+                                                    data.')
     args = parser.parse_args()
     global debug
     debug = args.debug
 
-    organize_files(args.files)
+    organize_files(args.exceptions, args.files)
 
 if __name__ == "__main__":
     main()
