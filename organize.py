@@ -3,6 +3,8 @@ import csv
 import numpy as np
 import pandas as pd
 
+from categories import E_CATEGORIES, I_CATEGORIES
+
 
 def organize_files(exceptions_file, *args):
     # Read and concatenate files into single dataframe.
@@ -17,6 +19,8 @@ def organize_files(exceptions_file, *args):
         print(f'Trimmed dataframe:\n{trimmed_df}\n')
     income = organize_income(trimmed_df)
     expenses = organize_expenses(trimmed_df)
+
+    add_categories(expenses)
 
 def remove_exceptions(exceptions_file, raw_df):
     exceptions = []
@@ -70,6 +74,16 @@ def organize_expenses(expenses):
     if debug:
         print(f'Organized expenses:\n{expenses}\n')
     return expenses
+
+def add_categories(e_df):
+    e_df['Category'] = ''
+    print(e_df)
+    # e_df = e_df.assign(Category=pd.Series(np.random.randn(len(e_df['Expense']))).values)
+    # print(e_df)
+    # for index in e_df.index:
+    #     print(index)
+    # for index, row in e_df.iterrows():
+    #     print(index, row['Expense'])
 
 def main():
     parser = argparse.ArgumentParser(description='Organize raw finances.')
