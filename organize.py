@@ -1,5 +1,7 @@
 import argparse
 import csv
+import os
+
 import numpy as np
 import pandas as pd
 
@@ -14,7 +16,8 @@ def organize_files(exceptions_file, *args):
         print('Files given: {}'.format(*args))
         print(f'Raw dataframe:\n{raw_df}\n')
     filtered_df = remove_exceptions(exceptions_file, raw_df)
-    trimmed_df = pd.DataFrame(filtered_df, columns = ['Posting Date', 'Amount'])
+    trimmed_df = pd.DataFrame(filtered_df, columns = ['Posting Date', 'Amount',
+                                                      'Extended Description'])
     if debug:
         print(f'Trimmed dataframe:\n{trimmed_df}\n')
     income = organize_income(trimmed_df)
@@ -44,7 +47,7 @@ def organize_income(df):
     income = df.copy()
     # Rename columns.
     income = income.drop(income[income.Amount < 0].index)
-    income.columns = ['Date', 'Income']
+    income.columns = ['Date', 'Income', 'Category']
     # Convert dates to format that pandas can work with.
     income['Date'] = pd.to_datetime(income['Date'])
     # Make the Date column the new index.
@@ -58,7 +61,7 @@ def organize_income(df):
 
 def organize_expenses(expenses):
     # Rename columns.
-    expenses.columns = ['Date', 'Expense']
+    expenses.columns = ['Date', 'Expense', 'Category']
     # Convert dates to format that pandas can work with.
     expenses['Date'] = pd.to_datetime(expenses['Date'])
     # Make the Date column the new index.
@@ -76,14 +79,32 @@ def organize_expenses(expenses):
     return expenses
 
 def add_categories(e_df):
-    e_df['Category'] = ''
-    print(e_df)
+    # e_df['Category'] = ''
+    # print(e_df)
     # e_df = e_df.assign(Category=pd.Series(np.random.randn(len(e_df['Expense']))).values)
     # print(e_df)
     # for index in e_df.index:
     #     print(index)
-    # for index, row in e_df.iterrows():
-    #     print(index, row['Expense'])
+    categories = []
+    for index, row in e_df.iterrows():
+        # Print column names.
+        print([e_df.index.name] + e_df.columns.tolist())
+        # Print single row of values.
+        print(index, row['Expense'], row['Category'])
+        # Print the categories to choose from.
+        print(E_CATEGORIES)
+        # Get user input and determine if it's valid else keep asking for input.
+        category = input('Enter a category: ')
+        while not good_input(category):
+            category = input('Invalid category. Please choose one of the ' \
+                             'numbers listed: ')
+        categories.append(category)
+        # Clear the screen between each iteration.
+        os.system('clear')
+    print(categories)
+
+def good_input(category):
+    return category.isdigit() and int(category) in E_CATEGORIES.keys()
 
 def main():
     parser = argparse.ArgumentParser(description='Organize raw finances.')
