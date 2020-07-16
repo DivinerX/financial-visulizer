@@ -23,7 +23,8 @@ def organize_files(exceptions_file, *args):
     income = organize_income(trimmed_df)
     expenses = organize_expenses(trimmed_df)
 
-    add_categories(expenses)
+    add_categories(expenses, E_CATEGORIES)
+    add_categories(income, I_CATEGORIES)
 
 def remove_exceptions(exceptions_file, raw_df):
     exceptions = []
@@ -44,9 +45,11 @@ def remove_exceptions(exceptions_file, raw_df):
     return raw_df
 
 def organize_income(df):
+    # Create a deep copy of the dataframe.
     income = df.copy()
+    # Remove all rows with negative numbers.
+    income = income[income.select_dtypes(include=[np.number]).ge(0).all(1)]
     # Rename columns.
-    income = income.drop(income[income.Amount < 0].index)
     income.columns = ['Date', 'Income', 'Category']
     # Convert dates to format that pandas can work with.
     income['Date'] = pd.to_datetime(income['Date'])
@@ -78,33 +81,32 @@ def organize_expenses(expenses):
         print(f'Organized expenses:\n{expenses}\n')
     return expenses
 
-def add_categories(e_df):
-    # e_df['Category'] = ''
-    # print(e_df)
-    # e_df = e_df.assign(Category=pd.Series(np.random.randn(len(e_df['Expense']))).values)
-    # print(e_df)
-    # for index in e_df.index:
-    #     print(index)
+def add_categories(df, category_dict):
+    # Once populated this list will get added to the dataframe.
     categories = []
-    for index, row in e_df.iterrows():
+    for index, row in df.iterrows():
         # Print column names.
-        print([e_df.index.name] + e_df.columns.tolist())
+        print([df.index.name] + df.columns.tolist())
         # Print single row of values.
-        print(index, row['Expense'], row['Category'])
-        # Print the categories to choose from.
-        print(E_CATEGORIES)
+        print(f'[{index}, {row[0]}, {row[1]}]')
+        # Print the expense categories to choose from.
+        print(category_dict)
         # Get user input and determine if it's valid else keep asking for input.
         category = input('Enter a category: ')
-        while not good_input(category):
+        while not good_input(category, category_dict):
             category = input('Invalid category. Please choose one of the ' \
                              'numbers listed: ')
-        categories.append(category)
+        categories.append(category_dict[int(category)])
         # Clear the screen between each iteration.
         os.system('clear')
-    print(categories)
+    # Add categories list to the dataframe.
+    df = df.assign(Category=categories)
+    if debug:
+        print(f'Categories:\n{categories}\n')
+        print(f'Dataframe with updated categories:\n{df}\n')
 
-def good_input(category):
-    return category.isdigit() and int(category) in E_CATEGORIES.keys()
+def good_input(category, category_dict):
+    return category.isdigit() and int(category) in category_dict.keys()
 
 def main():
     parser = argparse.ArgumentParser(description='Organize raw finances.')
