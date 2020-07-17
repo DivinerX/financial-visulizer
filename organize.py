@@ -97,18 +97,8 @@ def add_categories(df, category_dict):
         print(f'[{index}, {row[0]}, {row[1]}]')
         # Print the expense categories to choose from.
         print(category_dict)
-        category = input('Enter a category: ')
-        while not good_category(category, category_dict):
-            category = input('Invalid category. Please choose one of the ' \
-                             'numbers listed: ')
-        categories.append(category_dict[int(category)])
-        to_from = input(f'{df.columns[2]}: ')
-        while to_from is '' or to_from.isspace():
-            to_from = input('Please enter a value, any value: ')
-        recipients.append(to_from)
-        descriptions.append(input('(Optional) Description: '))
-        # Clear the screen between each iteration.
-        os.system('clear')
+        # Get user input to fill in the remaining columns.
+        get_input(df, category_dict, categories, recipients, descriptions)
     # Add lists to the dataframe.
     df = df.assign(Category = categories)
     if list(df.columns)[0] == 'Expense':
@@ -120,6 +110,22 @@ def add_categories(df, category_dict):
     if debug:
         print(f'Categories:\n{categories}\n')
         print(f'Dataframe with updated categories:\n{df}\n')
+
+def get_input(df, category_dict, categories, recipients, descriptions):
+    category = input('Enter a category: ')
+    while not good_category(category, category_dict):
+        category = input('Invalid category. Please choose one of the ' \
+                         'numbers listed: ')
+    categories.append(category_dict[int(category)])
+    # Get the third column name, it'll either be 'To' or 'From'.
+    to_from = input(f'{df.columns[2]}: ')
+    # While the input is an empty string or whitespace, ask for input again.
+    while to_from is '' or to_from.isspace():
+        to_from = input('Please enter a value, any value: ')
+    recipients.append(to_from)
+    descriptions.append(input('(Optional) Description: '))
+    # Clear the screen between each iteration.
+    os.system('clear')
 
 def good_category(category, category_dict):
     return category.isdigit() and int(category) in category_dict.keys()
