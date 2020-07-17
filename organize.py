@@ -23,8 +23,8 @@ def organize_files(exceptions_file, *args):
     income = organize_income(trimmed_df)
     expenses = organize_expenses(trimmed_df)
 
-    add_categories(expenses, E_CATEGORIES)
     add_categories(income, I_CATEGORIES)
+    add_categories(expenses, E_CATEGORIES)
 
 def remove_exceptions(exceptions_file, raw_df):
     exceptions = []
@@ -51,6 +51,8 @@ def organize_income(df):
     income = income[income.select_dtypes(include=[np.number]).ge(0).all(1)]
     # Rename columns.
     income.columns = ['Date', 'Income', 'Category']
+    income['From'] = ''
+    income['Description'] = ''
     # Convert dates to format that pandas can work with.
     income['Date'] = pd.to_datetime(income['Date'])
     # Make the Date column the new index.
@@ -65,6 +67,8 @@ def organize_income(df):
 def organize_expenses(expenses):
     # Rename columns.
     expenses.columns = ['Date', 'Expense', 'Category']
+    expenses['To'] = ''
+    expenses['Description'] = ''
     # Convert dates to format that pandas can work with.
     expenses['Date'] = pd.to_datetime(expenses['Date'])
     # Make the Date column the new index.
@@ -82,8 +86,10 @@ def organize_expenses(expenses):
     return expenses
 
 def add_categories(df, category_dict):
-    # Once populated this list will get added to the dataframe.
     categories = []
+    recipients = []
+    descriptions = []
+    type = None
     for index, row in df.iterrows():
         # Print column names.
         print([df.index.name] + df.columns.tolist())
@@ -91,21 +97,31 @@ def add_categories(df, category_dict):
         print(f'[{index}, {row[0]}, {row[1]}]')
         # Print the expense categories to choose from.
         print(category_dict)
-        # Get user input and determine if it's valid else keep asking for input.
         category = input('Enter a category: ')
-        while not good_input(category, category_dict):
+        while not good_category(category, category_dict):
             category = input('Invalid category. Please choose one of the ' \
                              'numbers listed: ')
         categories.append(category_dict[int(category)])
+        to_from = input(f'{df.columns[2]}: ')
+        while to_from is '' or to_from.isspace():
+            to_from = input('Please enter a value, any value: ')
+        recipients.append(to_from)
+        descriptions.append(input('(Optional) Description: '))
         # Clear the screen between each iteration.
         os.system('clear')
-    # Add categories list to the dataframe.
-    df = df.assign(Category=categories)
+    # Add lists to the dataframe.
+    df = df.assign(Category = categories)
+    if list(df.columns)[0] == 'Expense':
+        df = df.assign(To = recipients)
+    else:
+        df = df.assign(From = recipients)
+    df = df.assign(Description = descriptions)
+
     if debug:
         print(f'Categories:\n{categories}\n')
         print(f'Dataframe with updated categories:\n{df}\n')
 
-def good_input(category, category_dict):
+def good_category(category, category_dict):
     return category.isdigit() and int(category) in category_dict.keys()
 
 def main():
