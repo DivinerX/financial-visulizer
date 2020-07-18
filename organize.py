@@ -8,23 +8,33 @@ import pandas as pd
 from categories import E_CATEGORIES, I_CATEGORIES
 
 
-def organize_files(exceptions_file, *args):
+def organize_data(exceptions_file, *args):
     # Read and concatenate files into single dataframe.
     raw_df = pd.concat(map(pd.read_csv, *args))
+
     if debug:
         # Can't use a starred expression in fstrings so I used format this time.
         print('Files given: {}'.format(*args))
         print(f'Raw dataframe:\n{raw_df}\n')
+
     filtered_df = remove_exceptions(exceptions_file, raw_df)
     trimmed_df = pd.DataFrame(filtered_df, columns = ['Posting Date', 'Amount',
-                                                      'Extended Description'])
+                              'Extended Description'])
     if debug:
         print(f'Trimmed dataframe:\n{trimmed_df}\n')
+
     income = organize_income(trimmed_df)
     expenses = organize_expenses(trimmed_df)
 
-    add_categories(income, I_CATEGORIES)
-    add_categories(expenses, E_CATEGORIES)
+    # Get the user to fill out 'Category', 'To/From', and 'Description' columns.
+    income = fill_remaining_columns(income, I_CATEGORIES)
+    expenses = fill_remaining_columns(expenses, E_CATEGORIES)
+
+    if debug:
+        print(f'Final income dataframe:\n{income}\n')
+        print(f'Final expenses dataframe:\n{expenses}\n')
+
+    return income, expenses
 
 def remove_exceptions(exceptions_file, raw_df):
     exceptions = []
@@ -34,8 +44,10 @@ def remove_exceptions(exceptions_file, raw_df):
         for line in iterlines:
             # Get the exception from each line.
             exceptions.append(line[0].strip())
+
     if debug:
-        print(f'Exceptions: {exceptions}')
+        print(f'Exceptions: {exceptions}\n')
+
     for exception in exceptions:
         if debug:
             # Print the rows about to be removed from the dataframe.
@@ -78,14 +90,12 @@ def organize_expenses(expenses):
 
     # Remove all rows with positive numbers.
     expenses = expenses.drop(expenses[expenses.Expense > 0].index)
-    # TODO: Determine if needed.
-    # Convert all negatives prices to positive.
-    # expenses['Expense'] = expenses['Expense'].abs()
+
     if debug:
         print(f'Organized expenses:\n{expenses}\n')
     return expenses
 
-def add_categories(df, category_dict):
+def fill_remaining_columns(df, category_dict):
     categories = []
     recipients = []
     descriptions = []
@@ -108,8 +118,9 @@ def add_categories(df, category_dict):
     df = df.assign(Description = descriptions)
 
     if debug:
-        print(f'Categories:\n{categories}\n')
-        print(f'Dataframe with updated categories:\n{df}\n')
+        print(f'Entered categories:\n{categories}\n')
+
+    return df
 
 def get_input(df, category_dict, categories, recipients, descriptions):
     category = input('Enter a category: ')
@@ -130,22 +141,45 @@ def get_input(df, category_dict, categories, recipients, descriptions):
 def good_category(category, category_dict):
     return category.isdigit() and int(category) in category_dict.keys()
 
+def write_file(df, file_path, write_mode):
+    # If the file already exists, don't write column names since presumably they
+    # are already in the file.
+    header = None
+    if not os.path.isfile(file_path):
+        header = True
+
+    # Terminal color codes.
+    bold = '\033[1m'
+    reset = '\x1b[0m'
+
+    df.to_csv(path_or_buf=file_path, header=header, mode=write_mode)
+    print(f'{list(df.columns)[0]} dataframe written in "{write_mode}" mode ' \
+          f'to {bold}{file_path}{reset}.')
+
 def main():
     parser = argparse.ArgumentParser(description='Organize raw finances.')
-    parser.add_argument('-d', '--debug', action='store_true', help='Enable \
-                                                                    debug \
-                                                                    output.')
+    parser.add_argument('-d', '--debug', action='store_true', help='Enable ' \
+                        'debug output.')
     parser.add_argument('-f', '--files', nargs='*', required=True,
                         help='CSV file(s) containing finances.')
-    parser.add_argument('-e', '--exceptions', help='A CSV of newline separated \
-                                                    descriptions that if found \
-                                                    will get removed from the \
-                                                    data.')
+    parser.add_argument('-e', '--exceptions', help='A CSV of newline ' \
+                        'separated descriptions that if found will get ' \
+                        'removed from the data.')
+    parser.add_argument('-i', '--income_file', help='Path where income CSV ' \
+                        'file will be written to.', default='income.csv')
+    parser.add_argument('-x', '--expenses_file', help='Path where expenses ' \
+                        'CSV file will be written to.', default='expenses.csv')
+    parser.add_argument('-w', '--write_mode', help='Write mode for both the ' \
+                        'income and expenses CSV.', default='a')
+
     args = parser.parse_args()
     global debug
     debug = args.debug
 
-    organize_files(args.exceptions, args.files)
+    income, expenses = organize_data(args.exceptions, args.files)
+
+    write_file(income, args.income_file, args.write_mode)
+    write_file(expenses, args.expenses_file, args.write_mode)
 
 if __name__ == "__main__":
     main()
