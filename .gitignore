@@ -1,3 +1,6 @@
 env/
-Test*
 __pycache__/
+
+expenses.csv
+income.csv
+Test*
