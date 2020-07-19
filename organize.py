@@ -156,23 +156,44 @@ def write_file(df, file_path, write_mode):
     print(f'{list(df.columns)[0]} dataframe written in "{write_mode}" mode ' \
           f'to {bold}{file_path}{reset}.')
 
+# def main():
+#     parser = argparse.ArgumentParser(description='Organize raw finances.')
+#     parser.add_argument('-d', '--debug', action='store_true', help='enable ' \
+#                         'debug output')
+#     parser.add_argument('-f', '--files', nargs='*', required=True,
+#                         help='CSV file(s) containing finances')
+#     parser.add_argument('-e', '--exceptions', help='a CSV of newline ' \
+#                         'separated descriptions that if found will get ' \
+#                         'removed from the data')
+#     parser.add_argument('-i', '--income_file', default='income.csv',
+#                         required=True, help='path where income CSV file will ' \
+#                         'be written to')
+#     parser.add_argument('-x', '--expenses_file', default='expenses.csv',
+#                         required=True, help='path where expenses CSV file ' \
+#                         'will be written to')
+#     parser.add_argument('-w', '--write_mode', default='a', required=True,
+#                         help='write mode for both the income and expenses CSV')
+
 def main():
     parser = argparse.ArgumentParser(description='Organize raw finances.')
-    parser.add_argument('-d', '--debug', action='store_true', help='Enable ' \
-                        'debug output.')
-    parser.add_argument('-f', '--files', nargs='*', required=True,
-                        help='CSV file(s) containing finances.')
-    parser.add_argument('-e', '--exceptions', help='A CSV of newline ' \
+    parser.add_argument('files', nargs='+',
+                        help='CSV file(s) containing finances')
+    parser.add_argument('-d', '--debug', action='store_true', help='enable ' \
+                        'debug output')
+    parser.add_argument('-e', '--exceptions', help='a CSV of newline ' \
                         'separated descriptions that if found will get ' \
-                        'removed from the data.')
-    parser.add_argument('-i', '--income_file', help='Path where income CSV ' \
-                        'file will be written to.', default='income.csv')
-    parser.add_argument('-x', '--expenses_file', help='Path where expenses ' \
-                        'CSV file will be written to.', default='expenses.csv')
-    parser.add_argument('-w', '--write_mode', help='Write mode for both the ' \
-                        'income and expenses CSV.', default='a')
+                        'removed from the data')
+    parser.add_argument('-i', '--income_file', default='income.csv',
+                        help='path where income CSV file will be written to, ' \
+                        ' default is "income.csv"')
+    parser.add_argument('-x', '--expenses_file', default='expenses.csv',
+                        help='path where expenses CSV file will be written ' \
+                        'to, default is "expenses.csv"')
+    parser.add_argument('-w', '--write_mode', default='a',help='write mode ' \
+                        'for both the income and expenses CSV, default is "a"')
 
     args = parser.parse_args()
+    print(args)
     global debug
     debug = args.debug
 
