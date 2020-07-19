@@ -1,5 +1,6 @@
 env/
 __pycache__/
+tests/
 
 expenses.csv
 income.csv
