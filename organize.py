@@ -1,16 +1,21 @@
 import argparse
 import csv
 import os
+import pandas.errors
+import sys
 
 import numpy as np
 import pandas as pd
 
 from categories import E_CATEGORIES, I_CATEGORIES
 
+# Terminal color codes.
+BOLD = '\033[1m'
+RESET = '\x1b[0m'
+
 
 def organize_data(exceptions_file, *args):
-    # Read and concatenate files into single dataframe.
-    raw_df = pd.concat(map(pd.read_csv, *args))
+    raw_df = read_files(*args)
 
     if debug:
         # Can't use a starred expression in fstrings so I used format this time.
@@ -36,14 +41,36 @@ def organize_data(exceptions_file, *args):
 
     return income, expenses
 
+def read_files(files):
+    # Read and concatenate files into single dataframe.
+    dataframes = []
+    for file in files:
+        try:
+            # TODO: Implement check_columns() and execute here.
+            dataframes.append(pd.read_csv(file))
+        except FileNotFoundError as e:
+            print(e)
+            sys.exit(1)
+        except pandas.errors.EmptyDataError as e:
+            print(f'Skipping empty file {BOLD}{file}{RESET}')
+    return pd.concat(dataframes)
+
+def check_columns(df):
+    pass
+
 def remove_exceptions(exceptions_file, raw_df):
     exceptions = []
-    with open(exceptions_file, newline='') as f:
-        lines = csv.reader(f)
-        iterlines = iter(lines)
-        for line in iterlines:
-            # Get the exception from each line.
-            exceptions.append(line[0].strip())
+    try:
+        with open(exceptions_file, newline='') as f:
+            lines = csv.reader(f)
+            iterlines = iter(lines)
+            for line in iterlines:
+                # Get the exception from each line.
+                exceptions.append(line[0].strip())
+    except (TypeError, FileNotFoundError):
+        if debug:
+            print(f'No exceptions file provided.\n')
+        return raw_df
 
     if debug:
         print(f'Exceptions: {exceptions}\n')
@@ -148,31 +175,9 @@ def write_file(df, file_path, write_mode):
     if not os.path.isfile(file_path):
         header = True
 
-    # Terminal color codes.
-    bold = '\033[1m'
-    reset = '\x1b[0m'
-
     df.to_csv(path_or_buf=file_path, header=header, mode=write_mode)
     print(f'{list(df.columns)[0]} dataframe written in "{write_mode}" mode ' \
-          f'to {bold}{file_path}{reset}.')
-
-# def main():
-#     parser = argparse.ArgumentParser(description='Organize raw finances.')
-#     parser.add_argument('-d', '--debug', action='store_true', help='enable ' \
-#                         'debug output')
-#     parser.add_argument('-f', '--files', nargs='*', required=True,
-#                         help='CSV file(s) containing finances')
-#     parser.add_argument('-e', '--exceptions', help='a CSV of newline ' \
-#                         'separated descriptions that if found will get ' \
-#                         'removed from the data')
-#     parser.add_argument('-i', '--income_file', default='income.csv',
-#                         required=True, help='path where income CSV file will ' \
-#                         'be written to')
-#     parser.add_argument('-x', '--expenses_file', default='expenses.csv',
-#                         required=True, help='path where expenses CSV file ' \
-#                         'will be written to')
-#     parser.add_argument('-w', '--write_mode', default='a', required=True,
-#                         help='write mode for both the income and expenses CSV')
+          f'to {BOLD}{file_path}{RESET}')
 
 def main():
     parser = argparse.ArgumentParser(description='Organize raw finances.')
@@ -180,8 +185,8 @@ def main():
                         help='CSV file(s) containing finances')
     parser.add_argument('-d', '--debug', action='store_true', help='enable ' \
                         'debug output')
-    parser.add_argument('-e', '--exceptions', help='a CSV of newline ' \
-                        'separated descriptions that if found will get ' \
+    parser.add_argument('-e', '--exceptions', help='a file of newline ' \
+                        'separated strings that if found will get ' \
                         'removed from the data')
     parser.add_argument('-i', '--income_file', default='income.csv',
                         help='path where income CSV file will be written to, ' \
@@ -193,9 +198,12 @@ def main():
                         'for both the income and expenses CSV, default is "a"')
 
     args = parser.parse_args()
-    print(args)
     global debug
     debug = args.debug
+
+    assert args.income_file is not '' and not args.income_file.isspace()
+    assert args.expenses_file is not '' and not args.expenses_file.isspace()
+    assert args.write_mode is not '' and not args.write_mode.isspace()
 
     income, expenses = organize_data(args.exceptions, args.files)
 
