@@ -17,7 +17,7 @@ RESET = '\x1b[0m'
 def organize_data(exceptions_file, *args):
     raw_df = read_files(*args)
 
-    if debug:
+    if DEBUG:
         # Can't use a starred expression in fstrings so I used format this time.
         print('Files given: {}'.format(*args))
         print(f'Raw dataframe:\n{raw_df}\n')
@@ -25,7 +25,7 @@ def organize_data(exceptions_file, *args):
     filtered_df = remove_exceptions(exceptions_file, raw_df)
     trimmed_df = pd.DataFrame(filtered_df, columns = ['Posting Date', 'Amount',
                               'Extended Description'])
-    if debug:
+    if DEBUG:
         print(f'Trimmed dataframe:\n{trimmed_df}\n')
 
     income = organize_income(trimmed_df)
@@ -35,7 +35,7 @@ def organize_data(exceptions_file, *args):
     income = fill_remaining_columns(income, I_CATEGORIES)
     expenses = fill_remaining_columns(expenses, E_CATEGORIES)
 
-    if debug:
+    if DEBUG:
         print(f'Final income dataframe:\n{income}\n')
         print(f'Final expenses dataframe:\n{expenses}\n')
 
@@ -46,17 +46,24 @@ def read_files(files):
     dataframes = []
     for file in files:
         try:
-            # TODO: Implement check_columns() and execute here.
-            dataframes.append(pd.read_csv(file))
+            df = pd.read_csv(file)
+            if {'Posting Date', 'Amount', 'Extended Description'}.issubset(df.columns):
+                dataframes.append(df)
+            else:
+                print(f'Skipping file {BOLD}{file}{RESET}, missing required ' \
+                      'column(s)')
+                continue
         except FileNotFoundError as e:
             print(e)
             sys.exit(1)
         except pandas.errors.EmptyDataError as e:
             print(f'Skipping empty file {BOLD}{file}{RESET}')
-    return pd.concat(dataframes)
 
-def check_columns(df):
-    pass
+    if not dataframes:
+        print('Exiting, no usable files')
+        sys.exit(2)
+
+    return pd.concat(dataframes)
 
 def remove_exceptions(exceptions_file, raw_df):
     exceptions = []
@@ -68,15 +75,15 @@ def remove_exceptions(exceptions_file, raw_df):
                 # Get the exception from each line.
                 exceptions.append(line[0].strip())
     except (TypeError, FileNotFoundError):
-        if debug:
+        if DEBUG:
             print(f'No exceptions file provided.\n')
         return raw_df
 
-    if debug:
+    if DEBUG:
         print(f'Exceptions: {exceptions}\n')
 
     for exception in exceptions:
-        if debug:
+        if DEBUG:
             # Print the rows about to be removed from the dataframe.
             print(raw_df[raw_df['Extended Description'].str.contains(exception)])
         # Rewrite the dataframe with the rows containing exceptions now removed.
@@ -99,7 +106,7 @@ def organize_income(df):
     del income['Date']
     income = income.sort_index()
 
-    if debug:
+    if DEBUG:
         print(f'Organized income:\n{income}\n')
     return income
 
@@ -118,7 +125,7 @@ def organize_expenses(expenses):
     # Remove all rows with positive numbers.
     expenses = expenses.drop(expenses[expenses.Expense > 0].index)
 
-    if debug:
+    if DEBUG:
         print(f'Organized expenses:\n{expenses}\n')
     return expenses
 
@@ -144,7 +151,7 @@ def fill_remaining_columns(df, category_dict):
         df = df.assign(From = recipients)
     df = df.assign(Description = descriptions)
 
-    if debug:
+    if DEBUG:
         print(f'Entered categories:\n{categories}\n')
 
     return df
@@ -182,7 +189,10 @@ def write_file(df, file_path, write_mode):
 def main():
     parser = argparse.ArgumentParser(description='Organize raw finances.')
     parser.add_argument('files', nargs='+',
-                        help='CSV file(s) containing finances')
+                        help='CSV file(s) containing finances, required ' \
+                        'columns are "Posting Date", "Amount", "Extended ' \
+                        'Description"; if any one of these columns is missing' \
+                        ' the whole CSV it belongs to is ignored')
     parser.add_argument('-d', '--debug', action='store_true', help='enable ' \
                         'debug output')
     parser.add_argument('-e', '--exceptions', help='a file of newline ' \
@@ -198,8 +208,8 @@ def main():
                         'for both the income and expenses CSV, default is "a"')
 
     args = parser.parse_args()
-    global debug
-    debug = args.debug
+    global DEBUG
+    DEBUG = args.debug
 
     assert args.income_file is not '' and not args.income_file.isspace()
     assert args.expenses_file is not '' and not args.expenses_file.isspace()
