@@ -1,10 +1,10 @@
 import argparse
 import csv
 import os
-import pandas.errors
 import sys
 
 import numpy as np
+import pandas.errors
 import pandas as pd
 
 from categories import E_CATEGORIES, I_CATEGORIES
