@@ -8,7 +8,8 @@ Written in Python 3.7.7.
 
 ### Dependencies
 
-**pandas** 1.0.5  
+**pandas** 1.0.5
+**pygal** 2.4.0  
 **pytest** 5.4.3
 
 ## What is it?
