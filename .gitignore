@@ -1,6 +1,7 @@
 env/
 __pycache__/
 
-expenses.csv
-income.csv
+expense*
+income*
+*.svg
 Test*
