@@ -10,10 +10,12 @@ def pie_chart_date_range(df, title):
     pie_chart.title = title
     # Sum entire column.
     print(df.iloc[:, 1].sum())
-    # Sum all expense entries belonging to the "Childcare" category.
-    print(df.loc[df['Category'] == 'Childcare']['Expense'].sum())
-    pie_chart.add('Childcare', abs(df.loc[df['Category'] == 'Childcare']['Expense'].sum()))
-    pie_chart.add('Car payment', abs(df.loc[df['Category'] == 'Car payment']['Expense'].sum()))
+    mask = (df['Date'] >= '2020-07-04') & (df['Date'] <= '2020-07-06')
+    sliced_df = df.loc[mask]
+    print(sliced_df)
+    unique_categories = pd.unique(sliced_df['Category'])
+    for category in unique_categories:
+        pie_chart.add(category, abs(sliced_df.loc[sliced_df['Category'] == category]['Expense'].sum()))
     pie_chart.render_to_file('pie_chart.svg')
 
 def main():
