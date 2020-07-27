@@ -41,6 +41,12 @@ def date_range_slice(df, start, end):
     sliced_df = df.loc[mask]
     return sliced_df
 
+def get_time(df):
+    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+    unique = pd.unique(df['Date'].dt.year)
+    print(df['Date'].dt.year)
+    print(unique)
+
 def main():
     parser = argparse.ArgumentParser(description='Visualize organzied ' \
                                      'finances.')
@@ -58,8 +64,9 @@ def main():
         print(e)
         sys.exit(1)
 
-    pie_chart_date_range(expenses_df, 'Test title.svg', '2020-07-04', '2020-07-06')
-    total_bar_graph(income_df, expenses_df, 'Total Income, Expenses, and Savings')
+    # pie_chart_date_range(expenses_df, 'Test title.svg', '2020-07-04', '2020-07-06')
+    # total_bar_graph(income_df, expenses_df, 'Total Income, Expenses, and Savings')
+    get_time(expenses_df)
 
 if __name__ == "__main__":
     main()
