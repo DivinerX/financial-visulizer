@@ -4,6 +4,11 @@ import sys
 import pandas as pd
 import pygal
 
+MONTHS = {
+1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'Jun',
+7: 'Jul', 8: 'Aug', 9: 'Sep', 10: 'Oct', 11: 'Nov', 12: 'Dec'
+}
+
 
 def pie_chart_date_range(df, title, start, end):
     pie_chart = pygal.Pie()
@@ -36,16 +41,39 @@ def total_bar_graph(i_df, e_df, title):
     line_chart.add('Total Savings', savings)
     line_chart.render_to_file('bar_graph.svg')
 
+def months_bar_graph(df, title):
+    expense_months = get_time(df)
+    line_chart = pygal.Bar()
+    line_chart.legend_at_bottom=True
+    line_chart.legend_at_bottom_columns=len(expense_months)
+    line_chart.title = title
+
+    for month in expense_months:
+        month_sum = month.iloc[:, 1].sum()
+        # Reset index for each month frame so I can access index 0 on each.
+        month = month.reset_index()
+        # Make each bar name in "Month Year" format.
+        bar_name = month['Date'].dt.month_name()[0] + ' ' + str(month['Date'].dt.year[0])
+        line_chart.add(bar_name, month_sum)
+    line_chart.render_to_file('month_bar_graph.svg')
+
 def date_range_slice(df, start, end):
     mask = (df['Date'] >= start) & (df['Date'] <= end)
     sliced_df = df.loc[mask]
     return sliced_df
 
 def get_time(df):
+    month_frames = []
     df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
-    unique = pd.unique(df['Date'].dt.year)
-    print(df['Date'].dt.year)
-    print(unique)
+    years = pd.unique(df['Date'].dt.year)
+    for year in years:
+        year_df = df[df['Date'].dt.year == year]
+        months = pd.unique(year_df['Date'].dt.month)
+        for month in months:
+            month_df = year_df[year_df['Date'].dt.month == month]
+            month_frames.append(month_df)
+
+    return month_frames
 
 def main():
     parser = argparse.ArgumentParser(description='Visualize organzied ' \
@@ -66,7 +94,7 @@ def main():
 
     # pie_chart_date_range(expenses_df, 'Test title.svg', '2020-07-04', '2020-07-06')
     # total_bar_graph(income_df, expenses_df, 'Total Income, Expenses, and Savings')
-    get_time(expenses_df)
+    months_bar_graph(expenses_df, 'Months Graph')
 
 if __name__ == "__main__":
     main()
