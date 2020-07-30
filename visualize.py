@@ -41,7 +41,7 @@ def total_bar_graph(i_df, e_df, title):
     line_chart.add('Total Savings', savings)
     line_chart.render_to_file('bar_graph.svg')
 
-def months_bar_graph(df, title):
+def months_bar_graph(df, title, file, monthly_sums):
     expense_months = get_time(df)
     line_chart = pygal.Bar()
     line_chart.legend_at_bottom=True
@@ -54,8 +54,24 @@ def months_bar_graph(df, title):
         month = month.reset_index()
         # Make each bar name in "Month Year" format.
         bar_name = month['Date'].dt.month_name()[0] + ' ' + str(month['Date'].dt.year[0])
+        if bar_name in monthly_sums:
+            monthly_sums[bar_name] += month_sum
+        else:
+            monthly_sums[bar_name] = month_sum
         line_chart.add(bar_name, month_sum)
-    line_chart.render_to_file('month_bar_graph.svg')
+    line_chart.render_to_file(file)
+
+def combined_months_bar_graph(title, file, monthly_sums):
+    line_chart = pygal.Bar()
+    line_chart.legend_at_bottom=True
+    line_chart.legend_at_bottom_columns=len(monthly_sums)
+    line_chart.title = title
+
+    for name, sum in monthly_sums.items():
+        print(name, sum)
+        line_chart.add(name, sum)
+    line_chart.render_to_file(file)
+
 
 def date_range_slice(df, start, end):
     mask = (df['Date'] >= start) & (df['Date'] <= end)
@@ -94,7 +110,10 @@ def main():
 
     # pie_chart_date_range(expenses_df, 'Test title.svg', '2020-07-04', '2020-07-06')
     # total_bar_graph(income_df, expenses_df, 'Total Income, Expenses, and Savings')
-    months_bar_graph(expenses_df, 'Months Graph')
+    monthly_sums = {}
+    months_bar_graph(expenses_df, 'Monthly Expenses', 'monthly_expenses.svg', monthly_sums)
+    months_bar_graph(income_df, 'Monthly Income', 'monthly_income.svg', monthly_sums)
+    combined_months_bar_graph('Combined Monthly', 'combined_months.svg', monthly_sums)
 
 if __name__ == "__main__":
     main()
