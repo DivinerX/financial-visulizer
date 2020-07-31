@@ -4,11 +4,6 @@ import sys
 import pandas as pd
 import pygal
 
-MONTHS = {
-1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'Jun',
-7: 'Jul', 8: 'Aug', 9: 'Sep', 10: 'Oct', 11: 'Nov', 12: 'Dec'
-}
-
 
 def pie_chart_date_range(df, title, start, end):
     pie_chart = pygal.Pie()
@@ -23,6 +18,19 @@ def pie_chart_date_range(df, title, start, end):
         sum = abs(sliced_df.loc[sliced_df['Category'] == category][type].sum())
         pie_chart.add(category, sum)
     pie_chart.render_to_file('pie_chart.svg')
+
+def total_categories_pie_chart(df, title, file):
+    pie_chart = pygal.Pie()
+    pie_chart.title = title
+    # Expense or Income.
+    type = df.columns[1]
+
+    unique_categories = pd.unique(df['Category'])
+    for category in unique_categories:
+        # Sum all transactions of the current category.
+        sum = abs(df.loc[df['Category'] == category][type].sum())
+        pie_chart.add(category, sum)
+    pie_chart.render_to_file(file)
 
 def total_bar_graph(i_df, e_df, title):
     line_chart = pygal.Bar()
@@ -109,6 +117,8 @@ def main():
         sys.exit(1)
 
     # pie_chart_date_range(expenses_df, 'Test title.svg', '2020-07-04', '2020-07-06')
+    total_categories_pie_chart(expenses_df, 'Expenses Categories Total', 'expense_categories_total.svg')
+    total_categories_pie_chart(income_df, 'Income Categories Total', 'income_categories_total.svg')
     # total_bar_graph(income_df, expenses_df, 'Total Income, Expenses, and Savings')
     monthly_sums = {}
     months_bar_graph(expenses_df, 'Monthly Expenses', 'monthly_expenses.svg', monthly_sums)
