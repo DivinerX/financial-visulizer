@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 from pathlib import Path
 import sys
@@ -86,8 +87,12 @@ def combined_months_bar_graph(title, file, monthly_sums):
 
 
 def date_range_slice(df, start, end):
+    logging.debug('entering date_range_slice()')
+    logging.debug(f'start: {start}, end: {end}')
+    logging.debug(f'orginal dataframe:\n{df}\n')
     mask = (df['Date'] >= start) & (df['Date'] <= end)
     sliced_df = df.loc[mask]
+    logging.debug(f'sliced dataframe:\n{sliced_df}\n')
     return sliced_df
 
 def get_time(df):
@@ -123,6 +128,7 @@ def main():
         print(e)
         sys.exit(1)
 
+    logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
     pie_chart_date_range(expenses_df, 'Test title.svg', '2020-07-04', '2020-07-31', 'pie_chart.svg')
     total_categories_pie_chart(expenses_df, 'Expenses Categories Total', 'expense_categories_total.svg')
     total_categories_pie_chart(income_df, 'Income Categories Total', 'income_categories_total.svg')
