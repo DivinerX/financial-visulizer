@@ -142,14 +142,19 @@ def fill_remaining_columns(df, category_dict):
         # Print the expense categories to choose from.
         print(category_dict)
         # Get user input to fill in the remaining columns.
-        get_input(df, category_dict, categories, recipients, descriptions)
+        if SKIP_INPUT:
+            categories.append('NaN')
+            recipients.append('NaN')
+            descriptions.append('NaN')
+        else:
+            get_input(df, category_dict, categories, recipients, descriptions)
     # Add lists to the dataframe.
-    df = df.assign(Category = categories)
+    df = df.assign(Category=categories)
     if list(df.columns)[0] == 'Expense':
-        df = df.assign(To = recipients)
+        df = df.assign(To=recipients)
     else:
-        df = df.assign(From = recipients)
-    df = df.assign(Description = descriptions)
+        df = df.assign(From=recipients)
+    df = df.assign(Description=descriptions)
 
     if DEBUG:
         print(f'Entered categories:\n{categories}\n')
@@ -176,15 +181,31 @@ def good_category(category, category_dict):
     return category.isdigit() and int(category) in category_dict.keys()
 
 def write_file(df, file_path, write_mode):
-    # If the file already exists, don't write column names since presumably they
-    # are already in the file.
     header = None
-    if not os.path.isfile(file_path):
-        header = True
+    # Create df header to check if it already exists in file.
+    columns = df.index.name
+    for column in list(df.columns.values):
+        columns += ',' + column
 
-    df.to_csv(path_or_buf=file_path, header=header, mode=write_mode)
-    print(f'{list(df.columns)[0]} dataframe written in "{write_mode}" mode ' \
-          f'to {BOLD}{file_path}{RESET}')
+    # If the file doesn't exist, write the header.
+    if not os.path.isfile(file_path):
+        header=True
+
+    # Get first line of file and check if it equals header.
+    with open(file_path) as f:
+        first_line = f.readline().strip()
+    if 'w' not in write_mode and first_line == columns:
+        header=False
+    else:
+        header=True
+
+    # Only write to file if the dataframe is not empty.
+    if len(df.index) != 0:
+        df.to_csv(path_or_buf=file_path, header=header, mode=write_mode)
+        print(f'{list(df.columns)[0]} dataframe written in "{write_mode}" ' \
+              f'mode to {BOLD}{file_path}{RESET}')
+    else:
+        print(f'{BOLD}Not{RESET} writing empty dataframe to {file_path}.')
 
 def main():
     parser = argparse.ArgumentParser(description='Organize raw finances.')
@@ -206,10 +227,16 @@ def main():
                         'to, default is "expenses.csv"')
     parser.add_argument('-w', '--write_mode', default='a',help='write mode ' \
                         'for both the income and expenses CSV, default is "a"')
+    parser.add_argument('-s', '--skip_input', action='store_true',
+                        help='auto fill user input step with bogus data for ' \
+                        'quicker debugging')
 
     args = parser.parse_args()
     global DEBUG
     DEBUG = args.debug
+
+    global SKIP_INPUT
+    SKIP_INPUT = args.skip_input
 
     assert args.income_file is not '' and not args.income_file.isspace()
     assert args.expenses_file is not '' and not args.expenses_file.isspace()
