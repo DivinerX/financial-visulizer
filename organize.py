@@ -123,7 +123,7 @@ def organize_expenses(expenses):
     expenses = expenses.sort_index()
 
     # Remove all rows with positive numbers.
-    expenses = expenses.drop(expenses[expenses.Expense > 0].index)
+    expenses = expenses[expenses.select_dtypes(include=[np.number]).le(0).all(1)]
 
     if DEBUG:
         print(f'Organized expenses:\n{expenses}\n')
@@ -190,14 +190,14 @@ def write_file(df, file_path, write_mode):
     # If the file doesn't exist, write the header.
     if not os.path.isfile(file_path):
         header=True
-
-    # Get first line of file and check if it equals header.
-    with open(file_path) as f:
-        first_line = f.readline().strip()
-    if 'w' not in write_mode and first_line == columns:
-        header=False
     else:
-        header=True
+        # Check if write mode has 'w' and if first line of file equals header.
+        with open(file_path) as f:
+            first_line = f.readline().strip()
+            if 'w' not in write_mode and first_line == columns:
+                header=False
+            else:
+                header=True
 
     # Only write to file if the dataframe is not empty.
     if len(df.index) != 0:
