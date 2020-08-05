@@ -115,6 +115,10 @@ def main():
                         'debug output')
     parser.add_argument('income', help='CSV containing income')
     parser.add_argument('expenses', help='CSV containing expenses')
+    parser.add_argument('-s', '--start_date', help='date in YYYY-MM-DD format ' \
+                        'for pie chart to start from')
+    parser.add_argument('-e', '--end_date', help='date in YYYY-MM-DD format ' \
+                        'for pie chart to end on')
 
     args = parser.parse_args()
 
@@ -128,15 +132,29 @@ def main():
         print(e)
         sys.exit(1)
 
-    logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
-    pie_chart_date_range(expenses_df, 'Test title.svg', '2020-07-04', '2020-07-31', 'pie_chart.svg')
-    total_categories_pie_chart(expenses_df, 'Expenses Categories Total', 'expense_categories_total.svg')
-    total_categories_pie_chart(income_df, 'Income Categories Total', 'income_categories_total.svg')
-    total_bar_graph(income_df, expenses_df, 'Total Income, Expenses, and Savings', 'bar_graph.svg')
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
+
+    if args.start_date and args.end_date:
+        title = args.start_date + ' - ' + args.end_date
+        pie_chart_date_range(expenses_df, f'Expenses {title}', args.start_date,
+                             args.end_date, 'expenses_date_range.svg')
+        pie_chart_date_range(income_df, f'Income {title}', args.start_date,
+                             args.end_date, 'income_date_range.svg')
+
+    total_categories_pie_chart(expenses_df, 'Expenses Categories Total',
+                               'expense_categories_total.svg')
+    total_categories_pie_chart(income_df, 'Income Categories Total',
+                               'income_categories_total.svg')
+    total_bar_graph(income_df, expenses_df,
+                    'Total Income, Expenses, and Savings', 'bar_graph.svg')
     monthly_sums = {}
-    months_bar_graph(expenses_df, 'Monthly Expenses', 'monthly_expenses.svg', monthly_sums)
-    months_bar_graph(income_df, 'Monthly Income', 'monthly_income.svg', monthly_sums)
-    combined_months_bar_graph('Combined Monthly', 'combined_months.svg', monthly_sums)
+    months_bar_graph(expenses_df, 'Monthly Expenses', 'monthly_expenses.svg',
+                     monthly_sums)
+    months_bar_graph(income_df, 'Monthly Income', 'monthly_income.svg',
+                     monthly_sums)
+    combined_months_bar_graph('Combined Monthly', 'combined_months.svg',
+                              monthly_sums)
 
 if __name__ == "__main__":
     main()
