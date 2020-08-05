@@ -7,7 +7,7 @@ import numpy as np
 import pandas.errors
 import pandas as pd
 
-from categories import E_CATEGORIES, I_CATEGORIES
+from TestCategories import E_CATEGORIES, I_CATEGORIES
 
 # Terminal color codes.
 BOLD = '\033[1m'
@@ -135,18 +135,18 @@ def fill_remaining_columns(df, category_dict):
     descriptions = []
     type = None
     for index, row in df.iterrows():
-        # Print column names.
-        print([df.index.name] + df.columns.tolist())
-        # Print single row of values.
-        print(f'[{index}, {row[0]}, {row[1]}]')
-        # Print the expense categories to choose from.
-        print(category_dict)
-        # Get user input to fill in the remaining columns.
         if SKIP_INPUT:
             categories.append('NaN')
             recipients.append('NaN')
             descriptions.append('NaN')
         else:
+            # Print column names.
+            print([df.index.name] + df.columns.tolist())
+            # Print single row of values.
+            print(f'[{index}, {row[0]}, {row[1]}]')
+            # Print the expense categories to choose from.
+            print(category_dict)
+            # Get user input to fill in the remaining columns.
             get_input(df, category_dict, categories, recipients, descriptions)
     # Add lists to the dataframe.
     df = df.assign(Category=categories)
