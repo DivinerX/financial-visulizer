@@ -8,15 +8,27 @@ import pandas as pd
 import pygal
 
 GRAPHS_DIR = 'graphs/'
-
+HEADER = '\033[95m'
+OKBLUE = '\033[94m'
+OKGREEN = '\033[92m'
+WARNING = '\033[93m'
+FAIL = '\033[91m'
+ENDC = '\033[0m'
+BOLD = '\033[1m'
+UNDERLINE = '\033[4m'
+RESET = '\x1b[0m'
 
 def pie_chart_date_range(df, title, start, end, file):
+    logging.debug('Entering pie_chart_date_range')
+    logging.debug(f'Start: {start}, End: {end}')
+    logging.debug(f'Orginal dataframe:\n{df}\n')
     pie_chart = pygal.Pie()
     pie_chart.title = title
     # Expense or Income.
     type = df.columns[1]
 
     sliced_df = date_range_slice(df, start, end)
+    logging.debug(f'Sliced dataframe:\n{sliced_df}\n')
     unique_categories = pd.unique(sliced_df['Category'])
     for category in unique_categories:
         # Sum all transactions of the current category.
@@ -87,12 +99,12 @@ def combined_months_bar_graph(title, file, monthly_sums):
 
 
 def date_range_slice(df, start, end):
-    logging.debug('entering date_range_slice()')
-    logging.debug(f'start: {start}, end: {end}')
-    logging.debug(f'orginal dataframe:\n{df}\n')
+    logging.debug(f'Entering date_range_slice')
+    logging.debug(f'Start: {start}, End: {end}')
+    logging.debug(f'Orginal dataframe:\n{df}\n')
     mask = (df['Date'] >= start) & (df['Date'] <= end)
     sliced_df = df.loc[mask]
-    logging.debug(f'sliced dataframe:\n{sliced_df}\n')
+    logging.debug(f'Sliced dataframe:\n{sliced_df}\n')
     return sliced_df
 
 def get_time(df):
@@ -133,7 +145,9 @@ def main():
         sys.exit(1)
 
     if args.debug:
-        logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
+        format = f'[{HEADER}%(asctime)s{RESET} - {OKGREEN}%(levelname)s {RESET}] %(message)s'
+        logging.basicConfig(level=logging.DEBUG,
+                            format=format, datefmt=f'%H:%M:%S')
 
     if args.start_date and args.end_date:
         title = args.start_date + ' - ' + args.end_date
