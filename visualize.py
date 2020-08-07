@@ -67,13 +67,15 @@ def total_bar_graph(i_df, e_df, title, file):
     line_chart.render_to_file(GRAPHS_DIR + file)
 
 def months_bar_graph(df, title, file, monthly_sums):
-    expense_months = get_time(df)
+    logging.debug('Entering months_bar_graph')
+    logging.debug(f'Original dataframe: {df}')
+    months = get_time(df)
     line_chart = pygal.Bar()
     line_chart.legend_at_bottom=True
-    line_chart.legend_at_bottom_columns=len(expense_months)
+    line_chart.legend_at_bottom_columns=len(months)
     line_chart.title = title
 
-    for month in expense_months:
+    for month in months:
         month_sum = month.iloc[:, 1].sum().round(2)
         # Reset index for each month frame so I can access index 0 on each.
         month = month.reset_index()
@@ -99,7 +101,7 @@ def combined_months_bar_graph(title, file, monthly_sums):
 
 
 def date_range_slice(df, start, end):
-    logging.debug(f'Entering date_range_slice')
+    logging.debug('Entering date_range_slice')
     logging.debug(f'Start: {start}, End: {end}')
     logging.debug(f'Orginal dataframe:\n{df}\n')
     mask = (df['Date'] >= start) & (df['Date'] <= end)
@@ -108,7 +110,10 @@ def date_range_slice(df, start, end):
     return sliced_df
 
 def get_time(df):
+    logging.debug('Entering get_time')
     month_frames = []
+    # Convert the 'Date' category to pandas datetime format.
+    # Invalid parsing will be set as NaT (missing value).
     df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
     years = pd.unique(df['Date'].dt.year)
     for year in years:
@@ -118,6 +123,7 @@ def get_time(df):
             month_df = year_df[year_df['Date'].dt.month == month]
             month_frames.append(month_df)
 
+    logging.debug(f'Unique months: {month_frames}')
     return month_frames
 
 def main():
