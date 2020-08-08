@@ -37,6 +37,7 @@ def pie_chart_date_range(df, title, start, end, file):
     pie_chart.render_to_file(GRAPHS_DIR + file)
 
 def total_categories_pie_chart(df, title, file):
+    logging.debug('Entering total_categories_pie_chart')
     pie_chart = pygal.Pie()
     pie_chart.title = title
     # Expense or Income.
@@ -46,6 +47,7 @@ def total_categories_pie_chart(df, title, file):
     for category in unique_categories:
         # Sum all transactions of the current category.
         sum = abs(df.loc[df['Category'] == category][type].sum().round(2))
+        logging.debug(f'Category: {category}, Sum: {sum}')
         pie_chart.add(category, sum)
     pie_chart.render_to_file(GRAPHS_DIR + file)
 
