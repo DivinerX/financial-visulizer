@@ -93,12 +93,22 @@ def months_bar_graph(df, title, file, monthly_sums):
 def combined_months_bar_graph(title, file, monthly_sums):
     line_chart = pygal.Bar()
     line_chart.legend_at_bottom=True
-    line_chart.legend_at_bottom_columns=len(monthly_sums)
+    # if len(monthly_sums) > 15:
+    #         line_chart.legend_at_bottom_columns=15
+    # else:
+    #     line_chart.legend_at_bottom_columns=len(monthly_sums)
     line_chart.title = title
 
-    for name, sum in monthly_sums.items():
-        print(name, sum)
-        line_chart.add(name, sum)
+    if len(monthly_sums) > 15:
+        # Convert dict to list so we can get the last 15 items.
+        list_items = list(monthly_sums.items())
+        for item in list_items[-15:]:
+            print(item)
+            line_chart.add(item[0], item[1])
+    else:
+        for name, sum in monthly_sums.items():
+            print(name, sum)
+            line_chart.add(name, sum)
     line_chart.render_to_file(GRAPHS_DIR + file)
 
 
