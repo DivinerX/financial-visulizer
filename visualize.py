@@ -71,10 +71,10 @@ def total_bar_graph(i_df, e_df, title, file):
 def months_bar_graph(df, title, file, monthly_sums):
     logging.debug('Entering months_bar_graph')
     logging.debug(f'Original dataframe: {df}')
-    months = get_time(df)
+    months = get_monthly_sums(df)
     line_chart = pygal.Bar()
     line_chart.legend_at_bottom=True
-    line_chart.legend_at_bottom_columns=len(months)
+    # line_chart.legend_at_bottom_columns=len(months)
     line_chart.title = title
 
     for month in months:
@@ -83,8 +83,12 @@ def months_bar_graph(df, title, file, monthly_sums):
         month = month.reset_index()
         # Make each bar name in "Month Year" format.
         bar_name = month['Date'].dt.month_name()[0] + ' ' + str(month['Date'].dt.year[0])
+        # If the month and year already exist then add it to the existing
+        # dict entry.
         if bar_name in monthly_sums:
-            monthly_sums[bar_name] += month_sum
+            new_sum = (monthly_sums[bar_name] + month_sum).round(2)
+            monthly_sums[bar_name] = new_sum
+        # If the month and year don't exist, create a new dict entry for it.
         else:
             monthly_sums[bar_name] = month_sum
         line_chart.add(bar_name, month_sum)
@@ -103,12 +107,22 @@ def combined_months_bar_graph(title, file, monthly_sums):
         # Convert dict to list so we can get the last 15 items.
         list_items = list(monthly_sums.items())
         for item in list_items[-15:]:
-            print(item)
             line_chart.add(item[0], item[1])
     else:
         for name, sum in monthly_sums.items():
-            print(name, sum)
             line_chart.add(name, sum)
+    line_chart.render_to_file(GRAPHS_DIR + file)
+
+def middle_month_line_chart(i_df, e_df, title, file):
+    line_chart = pygal.Line()
+    line_chart.title = title
+    # line_chart.x_labels = ['map(str, range(2002, 2013))']
+
+    sliced_i_df = date_range_slice(i_df, '2020-05-12', '2020-06-12')
+    sliced_e_df = date_range_slice(e_df, '2020-05-12', '2020-06-12')
+    i_sum = sliced_i_df['Income'].sum().round(2)
+    e_sum = sliced_e_df['Expense'].sum().round(2)
+    line_chart.add('May-Jun', i_sum + e_sum))
     line_chart.render_to_file(GRAPHS_DIR + file)
 
 
@@ -121,8 +135,8 @@ def date_range_slice(df, start, end):
     logging.debug(f'Sliced dataframe:\n{sliced_df}\n')
     return sliced_df
 
-def get_time(df):
-    logging.debug('Entering get_time')
+def get_monthly_sums(df):
+    logging.debug('Entering get_monthly_sums')
     month_frames = []
     # Convert the 'Date' category to pandas datetime format.
     # Invalid parsing will be set as NaT (missing value).
@@ -187,6 +201,8 @@ def main():
                      monthly_sums)
     combined_months_bar_graph('Combined Monthly', 'combined_months.svg',
                               monthly_sums)
+    middle_month_line_chart(income_df, expenses_df, 'Middle month',
+                            'middle_month.svg')
 
 if __name__ == "__main__":
     main()
