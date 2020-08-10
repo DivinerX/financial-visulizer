@@ -122,7 +122,7 @@ def middle_month_line_chart(i_df, e_df, title, file):
     sliced_e_df = date_range_slice(e_df, '2020-05-12', '2020-06-12')
     i_sum = sliced_i_df['Income'].sum().round(2)
     e_sum = sliced_e_df['Expense'].sum().round(2)
-    line_chart.add('May-Jun', i_sum + e_sum))
+    line_chart.add('May-Jun', i_sum + e_sum)
     line_chart.render_to_file(GRAPHS_DIR + file)
 
 
