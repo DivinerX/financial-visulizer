@@ -71,7 +71,7 @@ def total_bar_graph(i_df, e_df, title, file):
 def months_bar_graph(df, title, file, monthly_sums):
     logging.debug('Entering months_bar_graph')
     logging.debug(f'Original dataframe: {df}')
-    months = get_monthly_sums(df)
+    months = split_months_into_frames(df)
     line_chart = pygal.Bar()
     line_chart.legend_at_bottom=True
     # line_chart.legend_at_bottom_columns=len(months)
@@ -135,8 +135,8 @@ def date_range_slice(df, start, end):
     logging.debug(f'Sliced dataframe:\n{sliced_df}\n')
     return sliced_df
 
-def get_monthly_sums(df):
-    logging.debug('Entering get_monthly_sums')
+def split_months_into_frames(df):
+    logging.debug('Entering split_months_into_frames')
     month_frames = []
     # Convert the 'Date' category to pandas datetime format.
     # Invalid parsing will be set as NaT (missing value).
@@ -151,6 +151,10 @@ def get_monthly_sums(df):
 
     logging.debug(f'Unique months: {month_frames}')
     return month_frames
+
+def get_monthly_sums(i_months, e_months):
+    # TODO: implement to replace logic in months_bar_graph()
+    pass
 
 def main():
     parser = argparse.ArgumentParser(description='Visualize organzied ' \
@@ -194,7 +198,11 @@ def main():
                                'income_categories_total.svg')
     total_bar_graph(income_df, expenses_df,
                     'Total Income, Expenses, and Savings', 'bar_graph.svg')
+
     monthly_sums = {}
+    i_months = split_months_into_frames(income_df)
+    e_months = split_months_into_frames(expenses_df)
+
     months_bar_graph(expenses_df, 'Monthly Expenses', 'monthly_expenses.svg',
                      monthly_sums)
     months_bar_graph(income_df, 'Monthly Income', 'monthly_income.svg',
