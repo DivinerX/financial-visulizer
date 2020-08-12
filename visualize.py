@@ -152,9 +152,23 @@ def split_months_into_frames(df):
     logging.debug(f'Unique months: {month_frames}')
     return month_frames
 
-def get_monthly_sums(i_months, e_months):
-    # TODO: implement to replace logic in months_bar_graph()
-    pass
+def get_monthly_sums(df, monthly_sums):
+    months = split_months_into_frames(df)
+
+    for month in months:
+        month_sum = month.iloc[:, 1].sum().round(2)
+        # Reset index for each month frame so I can access index 0 on each.
+        month = month.reset_index()
+        # Make each bar name in "Month Year" format.
+        bar_name = month['Date'].dt.month_name()[0] + ' ' + str(month['Date'].dt.year[0])
+        # If the month and year already exist then add it to the existing
+        # dict entry.
+        if bar_name in monthly_sums:
+            new_sum = (monthly_sums[bar_name] + month_sum).round(2)
+            monthly_sums[bar_name] = new_sum
+        # If the month and year don't exist, create a new dict entry for it.
+        else:
+            monthly_sums[bar_name] = month_sum
 
 def main():
     parser = argparse.ArgumentParser(description='Visualize organzied ' \
@@ -200,8 +214,6 @@ def main():
                     'Total Income, Expenses, and Savings', 'bar_graph.svg')
 
     monthly_sums = {}
-    i_months = split_months_into_frames(income_df)
-    e_months = split_months_into_frames(expenses_df)
 
     months_bar_graph(expenses_df, 'Monthly Expenses', 'monthly_expenses.svg',
                      monthly_sums)
