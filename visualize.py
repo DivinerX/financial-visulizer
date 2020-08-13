@@ -71,13 +71,13 @@ def total_bar_graph(i_df, e_df, title, file):
 def months_bar_graph(df, title, file, monthly_sums):
     logging.debug('Entering months_bar_graph')
     logging.debug(f'Original dataframe: {df}')
-    months = split_months_into_frames(df)
+    month_frames = split_months_into_frames(df)
     line_chart = pygal.Bar()
     line_chart.legend_at_bottom=True
-    # line_chart.legend_at_bottom_columns=len(months)
+    # line_chart.legend_at_bottom_columns=len(month_frames)
     line_chart.title = title
 
-    for month in months:
+    for month in month_frames:
         month_sum = month.iloc[:, 1].sum().round(2)
         # Reset index for each month frame so I can access index 0 on each.
         month = month.reset_index()
@@ -152,24 +152,6 @@ def split_months_into_frames(df):
     logging.debug(f'Unique months: {month_frames}')
     return month_frames
 
-def get_monthly_sums(df, monthly_sums):
-    months = split_months_into_frames(df)
-
-    for month in months:
-        month_sum = month.iloc[:, 1].sum().round(2)
-        # Reset index for each month frame so I can access index 0 on each.
-        month = month.reset_index()
-        # Make each bar name in "Month Year" format.
-        bar_name = month['Date'].dt.month_name()[0] + ' ' + str(month['Date'].dt.year[0])
-        # If the month and year already exist then add it to the existing
-        # dict entry.
-        if bar_name in monthly_sums:
-            new_sum = (monthly_sums[bar_name] + month_sum).round(2)
-            monthly_sums[bar_name] = new_sum
-        # If the month and year don't exist, create a new dict entry for it.
-        else:
-            monthly_sums[bar_name] = month_sum
-
 def main():
     parser = argparse.ArgumentParser(description='Visualize organzied ' \
                                      'finances.')
@@ -188,8 +170,8 @@ def main():
         Path('graphs').mkdir(exist_ok=True)
 
     try:
-        income_df = pd.read_csv(args.income)
-        expenses_df = pd.read_csv(args.expenses)
+        i_df = pd.read_csv(args.income)
+        e_df = pd.read_csv(args.expenses)
     except FileNotFoundError as e:
         print(e)
         sys.exit(1)
@@ -201,27 +183,30 @@ def main():
 
     if args.start_date and args.end_date:
         title = args.start_date + ' - ' + args.end_date
-        pie_chart_date_range(expenses_df, f'Expenses {title}', args.start_date,
+        pie_chart_date_range(e_df, f'Expenses {title}', args.start_date,
                              args.end_date, 'expenses_date_range.svg')
-        pie_chart_date_range(income_df, f'Income {title}', args.start_date,
+        pie_chart_date_range(i_df, f'Income {title}', args.start_date,
                              args.end_date, 'income_date_range.svg')
 
-    total_categories_pie_chart(expenses_df, 'Expenses Categories Total',
+    i_month_frames = split_months_into_frames(i_df)
+    e_month_frames = split_months_into_frames(e_df)
+
+    total_categories_pie_chart(e_df, 'Expenses Categories Total',
                                'expense_categories_total.svg')
-    total_categories_pie_chart(income_df, 'Income Categories Total',
+    total_categories_pie_chart(i_df, 'Income Categories Total',
                                'income_categories_total.svg')
-    total_bar_graph(income_df, expenses_df,
+    total_bar_graph(i_df, e_df,
                     'Total Income, Expenses, and Savings', 'bar_graph.svg')
 
     monthly_sums = {}
 
-    months_bar_graph(expenses_df, 'Monthly Expenses', 'monthly_expenses.svg',
+    months_bar_graph(e_df, 'Monthly Expenses', 'monthly_expenses.svg',
                      monthly_sums)
-    months_bar_graph(income_df, 'Monthly Income', 'monthly_income.svg',
+    months_bar_graph(i_df, 'Monthly Income', 'monthly_income.svg',
                      monthly_sums)
     combined_months_bar_graph('Combined Monthly', 'combined_months.svg',
                               monthly_sums)
-    middle_month_line_chart(income_df, expenses_df, 'Middle month',
+    middle_month_line_chart(i_df, e_df, 'Middle month',
                             'middle_month.svg')
 
 if __name__ == "__main__":
