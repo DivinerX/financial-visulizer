@@ -68,30 +68,15 @@ def total_bar_graph(i_df, e_df, title, file):
     line_chart.add('Total Savings', savings)
     line_chart.render_to_file(GRAPHS_DIR + file)
 
-def months_bar_graph(df, title, file, monthly_sums):
+def months_bar_graph(title, file, monthly_sums):
     logging.debug('Entering months_bar_graph')
-    logging.debug(f'Original dataframe: {df}')
-    month_frames = split_months_into_frames(df)
     line_chart = pygal.Bar()
     line_chart.legend_at_bottom=True
     # line_chart.legend_at_bottom_columns=len(month_frames)
     line_chart.title = title
 
-    for month in month_frames:
-        month_sum = month.iloc[:, 1].sum().round(2)
-        # Reset index for each month frame so I can access index 0 on each.
-        month = month.reset_index()
-        # Make each bar name in "Month Year" format.
-        bar_name = month['Date'].dt.month_name()[0] + ' ' + str(month['Date'].dt.year[0])
-        # If the month and year already exist then add it to the existing
-        # dict entry.
-        if bar_name in monthly_sums:
-            new_sum = (monthly_sums[bar_name] + month_sum).round(2)
-            monthly_sums[bar_name] = new_sum
-        # If the month and year don't exist, create a new dict entry for it.
-        else:
-            monthly_sums[bar_name] = month_sum
-        line_chart.add(bar_name, month_sum)
+    for sum in monthly_sums:
+        line_chart.add(sum[0], sum[1])
     line_chart.render_to_file(GRAPHS_DIR + file)
 
 def combined_months_bar_graph(title, file, monthly_sums):
@@ -152,6 +137,26 @@ def split_months_into_frames(df):
     logging.debug(f'Unique months: {month_frames}')
     return month_frames
 
+def calculate_monthly_sums(month_frames, total_monthly_sums):
+    # Monthly sums unique to the dataframe passed in, whether income or expense.
+    monthly_sums = []
+    for month in month_frames:
+        month_sum = month.iloc[:, 1].sum().round(2)
+        # Reset index for each month frame so I can access index 0 on each.
+        month = month.reset_index()
+        # Make each bar name in "Month Year" format.
+        bar_name = month['Date'].dt.month_name()[0] + ' ' + str(month['Date'].dt.year[0])
+        # If the month and year already exist then add it to the existing
+        # dict entry.
+        if bar_name in total_monthly_sums:
+            new_sum = (total_monthly_sums[bar_name] + month_sum).round(2)
+            total_monthly_sums[bar_name] = new_sum
+        # If the month and year don't exist, create a new dict entry for it.
+        else:
+            total_monthly_sums[bar_name] = month_sum
+        monthly_sums.append((bar_name, month_sum))
+    return monthly_sums
+
 def main():
     parser = argparse.ArgumentParser(description='Visualize organzied ' \
                                      'finances.')
@@ -188,8 +193,13 @@ def main():
         pie_chart_date_range(i_df, f'Income {title}', args.start_date,
                              args.end_date, 'income_date_range.svg')
 
+    # Monthly total for income and expenses combined. Gets filled in by the
+    # calculate_monthly_sums() method.
+    total_monthly_sums = {}
     i_month_frames = split_months_into_frames(i_df)
     e_month_frames = split_months_into_frames(e_df)
+    i_monthly_sums = calculate_monthly_sums(i_month_frames, total_monthly_sums)
+    e_monthly_sums = calculate_monthly_sums(e_month_frames, total_monthly_sums)
 
     total_categories_pie_chart(e_df, 'Expenses Categories Total',
                                'expense_categories_total.svg')
@@ -198,14 +208,10 @@ def main():
     total_bar_graph(i_df, e_df,
                     'Total Income, Expenses, and Savings', 'bar_graph.svg')
 
-    monthly_sums = {}
-
-    months_bar_graph(e_df, 'Monthly Expenses', 'monthly_expenses.svg',
-                     monthly_sums)
-    months_bar_graph(i_df, 'Monthly Income', 'monthly_income.svg',
-                     monthly_sums)
+    months_bar_graph('Monthly Income', 'monthly_income.svg', i_monthly_sums)
+    months_bar_graph('Monthly Expenses', 'monthly_expenses.svg', e_monthly_sums)
     combined_months_bar_graph('Combined Monthly', 'combined_months.svg',
-                              monthly_sums)
+                              total_monthly_sums)
     middle_month_line_chart(i_df, e_df, 'Middle month',
                             'middle_month.svg')
 
