@@ -1,4 +1,5 @@
 import argparse
+from collections import OrderedDict
 import logging
 import os
 from pathlib import Path
@@ -15,6 +16,11 @@ FAIL = '\033[91m'
 BOLD = '\033[1m'
 UNDERLINE = '\033[4m'
 RESET = '\x1b[0m'
+MONTHS = {'January': '01', 'February': '02', 'March': '03', 'April': '04',
+          'May': '05', 'June': '06', 'July': '07', 'August': '08',
+          'September': '09', 'October': '10', 'November': '11',
+          'December': '12'}
+
 
 def pie_chart_date_range(df, title, start, end, file):
     logging.debug('Entering pie_chart_date_range')
@@ -67,7 +73,7 @@ def total_bar_graph(i_df, e_df, title, file):
     line_chart.add('Total Savings', savings)
     line_chart.render_to_file(GRAPHS_DIR + file)
 
-def months_bar_graph(title, file, monthly_sums):
+def months_bar_graph(monthly_sums, title, file):
     logging.debug('Entering months_bar_graph')
     line_chart = pygal.Bar()
     line_chart.legend_at_bottom=True
@@ -78,37 +84,38 @@ def months_bar_graph(title, file, monthly_sums):
         line_chart.add(sum[0], sum[1])
     line_chart.render_to_file(GRAPHS_DIR + file)
 
-def combined_months_bar_graph(title, file, monthly_sums):
+def combined_months_bar_graph(total_monthly_sums, title, file):
     line_chart = pygal.Bar()
     line_chart.legend_at_bottom=True
-    # if len(monthly_sums) > 15:
+    # if len(total_monthly_sums) > 15:
     #         line_chart.legend_at_bottom_columns=15
     # else:
-    #     line_chart.legend_at_bottom_columns=len(monthly_sums)
+    #     line_chart.legend_at_bottom_columns=len(total_monthly_sums)
     line_chart.title = title
 
-    if len(monthly_sums) > 15:
+    if len(total_monthly_sums) > 15:
         # Convert dict to list so we can get the last 15 items.
-        list_items = list(monthly_sums.items())
+        list_items = list(total_monthly_sums.items())
         for item in list_items[-15:]:
             line_chart.add(item[0], item[1])
     else:
-        for name, sum in monthly_sums.items():
+        for name, sum in total_monthly_sums.items():
             line_chart.add(name, sum)
     line_chart.render_to_file(GRAPHS_DIR + file)
 
-def middle_month_line_chart(i_df, e_df, title, file):
+def middle_month_line_chart(total_monthly_sums, title, file):
     line_chart = pygal.Line()
     line_chart.title = title
     # line_chart.x_labels = ['map(str, range(2002, 2013))']
 
-    sliced_i_df = date_range_slice(i_df, '2020-05-12', '2020-06-12')
-    sliced_e_df = date_range_slice(e_df, '2020-05-12', '2020-06-12')
-    i_sum = sliced_i_df['Income'].sum().round(2)
-    e_sum = sliced_e_df['Expense'].sum().round(2)
-    line_chart.add('May-Jun', i_sum + e_sum)
-    line_chart.render_to_file(GRAPHS_DIR + file)
-
+    for month in total_monthly_sums:
+        print(month[bar])
+    # sliced_i_df = date_range_slice(i_df, '2020-05-12', '2020-06-12')
+    # sliced_e_df = date_range_slice(e_df, '2020-05-12', '2020-06-12')
+    # i_sum = sliced_i_df['Income'].sum().round(2)
+    # e_sum = sliced_e_df['Expense'].sum().round(2)
+    # line_chart.add('May-Jun', i_sum + e_sum)
+    # line_chart.render_to_file(GRAPHS_DIR + file)
 
 def date_range_slice(df, start, end):
     logging.debug('Entering date_range_slice')
@@ -194,25 +201,27 @@ def main():
 
     # Monthly total for income and expenses combined. Gets filled in by the
     # calculate_monthly_sums() method.
-    total_monthly_sums = {}
+    total_monthly_sums = OrderedDict()
     i_month_frames = split_months_into_frames(i_df)
     e_month_frames = split_months_into_frames(e_df)
     i_monthly_sums = calculate_monthly_sums(i_month_frames, total_monthly_sums)
     e_monthly_sums = calculate_monthly_sums(e_month_frames, total_monthly_sums)
+    print(total_monthly_sums)
 
     total_categories_pie_chart(e_df, 'Expenses Categories Total',
                                'expense_categories_total.svg')
     total_categories_pie_chart(i_df, 'Income Categories Total',
                                'income_categories_total.svg')
-    total_bar_graph(i_df, e_df,
-                    'Total Income, Expenses, and Savings', 'bar_graph.svg')
+    total_bar_graph(i_df, e_df, 'Total Income, Expenses, and Savings',
+                    'bar_graph.svg')
 
-    months_bar_graph('Monthly Income', 'monthly_income.svg', i_monthly_sums)
-    months_bar_graph('Monthly Expenses', 'monthly_expenses.svg', e_monthly_sums)
-    combined_months_bar_graph('Combined Monthly', 'combined_months.svg',
-                              total_monthly_sums)
-    middle_month_line_chart(i_df, e_df, 'Middle month',
-                            'middle_month.svg')
+    months_bar_graph(i_monthly_sums, 'Monthly Income', 'monthly_income.svg')
+    months_bar_graph(e_monthly_sums, 'Monthly Expenses', 'monthly_expenses.svg')
+    combined_months_bar_graph(total_monthly_sums, 'Combined Monthly',
+                              'combined_months.svg')
+
+    # middle_month_line_chart(total_monthly_sums, 'Middle month',
+    #                         'middle_month.svg')
 
 if __name__ == "__main__":
     main()
