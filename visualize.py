@@ -8,12 +8,10 @@ import pandas as pd
 import pygal
 
 GRAPHS_DIR = 'graphs/'
-HEADER = '\033[95m'
 OKBLUE = '\033[94m'
 OKGREEN = '\033[92m'
 WARNING = '\033[93m'
 FAIL = '\033[91m'
-ENDC = '\033[0m'
 BOLD = '\033[1m'
 UNDERLINE = '\033[4m'
 RESET = '\x1b[0m'
@@ -52,6 +50,7 @@ def total_categories_pie_chart(df, title, file):
     pie_chart.render_to_file(GRAPHS_DIR + file)
 
 def total_bar_graph(i_df, e_df, title, file):
+    logging.debug('Entering total_bar_graph')
     line_chart = pygal.Bar()
     line_chart.legend_at_bottom=True
     # Make it so the whole legend will be on just one line.
