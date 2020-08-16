@@ -207,6 +207,8 @@ def main():
     i_monthly_sums = calculate_monthly_sums(i_month_frames, total_monthly_sums)
     e_monthly_sums = calculate_monthly_sums(e_month_frames, total_monthly_sums)
     print(total_monthly_sums)
+    list = i_df['Date'].dt.strftime('%Y-%m').unique().tolist()
+    # print(i_df.loc['2020-07-01':'2020-07-30'])
 
     total_categories_pie_chart(e_df, 'Expenses Categories Total',
                                'expense_categories_total.svg')
