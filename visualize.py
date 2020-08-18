@@ -163,6 +163,25 @@ def calculate_monthly_sums(month_frames, total_monthly_sums):
         monthly_sums.append((bar_name, month_sum))
     return monthly_sums
 
+def new_monthly_sums(df):
+    # Get list of all unique year/month combinations in dataframe (YYYY-MM).
+    list = df['Date'].dt.strftime('%Y-%m').unique().tolist()
+    print(list)
+    for i in list:
+        year = i.split('-')[0]
+        month = i.split('-')[1]
+        next_month = None
+        if month == '12':
+            next_month = '01'
+            year = str(int(year) + 1)
+        elif month == '09' or month == '10' or month == '11':
+            next_month = str(int(month) + 1)
+        else:
+            next_month = '0' + str(int(month) + 1)
+        print(i, year + '-' + next_month)
+    # print(date_range_slice(df, '2019-07-01', '2019-11-15'))
+    # print(df.loc['2020-07-01':'2020-07-30'])
+
 def main():
     parser = argparse.ArgumentParser(description='Visualize organzied ' \
                                      'finances.')
@@ -206,9 +225,8 @@ def main():
     e_month_frames = split_months_into_frames(e_df)
     i_monthly_sums = calculate_monthly_sums(i_month_frames, total_monthly_sums)
     e_monthly_sums = calculate_monthly_sums(e_month_frames, total_monthly_sums)
-    print(total_monthly_sums)
-    list = i_df['Date'].dt.strftime('%Y-%m').unique().tolist()
-    # print(i_df.loc['2020-07-01':'2020-07-30'])
+    # print(total_monthly_sums)
+    new_monthly_sums(i_df)
 
     total_categories_pie_chart(e_df, 'Expenses Categories Total',
                                'expense_categories_total.svg')
