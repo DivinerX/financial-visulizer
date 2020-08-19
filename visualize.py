@@ -1,4 +1,5 @@
 import argparse
+from calendar import isleap
 from collections import OrderedDict
 import logging
 import os
@@ -163,24 +164,46 @@ def calculate_monthly_sums(month_frames, total_monthly_sums):
         monthly_sums.append((bar_name, month_sum))
     return monthly_sums
 
-def new_monthly_sums(df):
+# def new_monthly_sums(df):
+#     # Get list of all unique year/month combinations in dataframe (YYYY-MM).
+#     list = df['Date'].dt.strftime('%Y-%m').unique().tolist()
+#     print(list)
+#     for month_year in list:
+#         year = month_year.split('-')[0]
+#         month = month_year.split('-')[1]
+#         next_month = None
+#         if month == '12':
+#             next_month = '01'
+#             year = str(int(year) + 1)
+#         elif month == '09' or month == '10' or month == '11':
+#             next_month = str(int(month) + 1)
+#         else:
+#             next_month = '0' + str(int(month) + 1)
+#         next_month_year = year + '-' + next_month
+#         print(month_year, next_month_year)
+#         print(date_range_slice(df, f'{month_year}-15', f'{next_month_year}-15'))
+#     # print(df.loc['2020-07-01':'2020-07-30'])
+
+def sums(df, sum_df):
     # Get list of all unique year/month combinations in dataframe (YYYY-MM).
-    list = df['Date'].dt.strftime('%Y-%m').unique().tolist()
-    print(list)
-    for i in list:
-        year = i.split('-')[0]
-        month = i.split('-')[1]
-        next_month = None
-        if month == '12':
-            next_month = '01'
-            year = str(int(year) + 1)
-        elif month == '09' or month == '10' or month == '11':
-            next_month = str(int(month) + 1)
-        else:
-            next_month = '0' + str(int(month) + 1)
-        print(i, year + '-' + next_month)
-    # print(date_range_slice(df, '2019-07-01', '2019-11-15'))
-    # print(df.loc['2020-07-01':'2020-07-30'])
+    month_years = df['Date'].dt.strftime('%Y-%m').unique().tolist()
+    for month_year in month_years:
+        last_day = '31'
+        month = month_year.split('-')[1]
+        year = int(month_year.split('-')[0])
+        if month == '02':
+            # Check for leap year.
+            if isleap(year):
+                last_day = '29'
+            else:
+                last_day = '28'
+        elif month == '04' or month == '06' or month == '09' or month == '11':
+            last_day = '30'
+        sum = date_range_slice(df, f'{month_year}-1', f'{month_year}-{last_day}').iloc[:, 1].sum().round(2)
+        sum_df = sum_df.append({'Date': month_year + '-1', 'Sum': sum}, ignore_index=True)
+    print(sum_df)
+    # print(new.iloc[:, 1].sum().round(2))
+
 
 def main():
     parser = argparse.ArgumentParser(description='Visualize organzied ' \
@@ -221,12 +244,14 @@ def main():
     # Monthly total for income and expenses combined. Gets filled in by the
     # calculate_monthly_sums() method.
     total_monthly_sums = OrderedDict()
+    sum_df = pd.DataFrame(columns=['Date', 'Sum'])
     i_month_frames = split_months_into_frames(i_df)
     e_month_frames = split_months_into_frames(e_df)
     i_monthly_sums = calculate_monthly_sums(i_month_frames, total_monthly_sums)
     e_monthly_sums = calculate_monthly_sums(e_month_frames, total_monthly_sums)
     # print(total_monthly_sums)
-    new_monthly_sums(i_df)
+    # new_monthly_sums(i_df)
+    sums(i_df, sum_df)
 
     total_categories_pie_chart(e_df, 'Expenses Categories Total',
                                'expense_categories_total.svg')
