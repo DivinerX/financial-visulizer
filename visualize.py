@@ -201,7 +201,7 @@ def sums(df, sum_df):
             last_day = '30'
         sum = date_range_slice(df, f'{month_year}-1', f'{month_year}-{last_day}').iloc[:, 1].sum().round(2)
         sum_df = sum_df.append({'Date': month_year + '-1', 'Sum': sum}, ignore_index=True)
-    print(sum_df)
+    return sum_df
     # print(new.iloc[:, 1].sum().round(2))
 
 
@@ -251,7 +251,11 @@ def main():
     e_monthly_sums = calculate_monthly_sums(e_month_frames, total_monthly_sums)
     # print(total_monthly_sums)
     # new_monthly_sums(i_df)
-    sums(i_df, sum_df)
+    sum_df = sums(i_df, sum_df)
+    sum_df = sums(e_df, sum_df)
+    print(sum_df)
+    # Combine values for duplicate year/month combinations and sort.
+    print(sum_df.groupby('Date', as_index=False).sum().round(2))
 
     total_categories_pie_chart(e_df, 'Expenses Categories Total',
                                'expense_categories_total.svg')
