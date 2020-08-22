@@ -85,33 +85,24 @@ def months_bar_graph(monthly_sums, title, file):
         line_chart.add(sum[0], sum[1])
     line_chart.render_to_file(GRAPHS_DIR + file)
 
-def combined_months_bar_graph(total_monthly_sums, title, file):
+def combined_months_bar_graph(sum_df, title, file):
     line_chart = pygal.Bar()
     line_chart.legend_at_bottom=True
-    # if len(total_monthly_sums) > 15:
-    #         line_chart.legend_at_bottom_columns=15
-    # else:
-    #     line_chart.legend_at_bottom_columns=len(total_monthly_sums)
     line_chart.title = title
+    month_names = list(sum_df['Date'].dt.month_name())
+    years = list(sum_df['Date'].dt.year)
+    entries = len(sum_df.index)
 
-    if len(total_monthly_sums) > 15:
-        # Convert dict to list so we can get the last 15 items.
-        list_items = list(total_monthly_sums.items())
-        for item in list_items[-15:]:
-            line_chart.add(item[0], item[1])
-    else:
-        for name, sum in total_monthly_sums.items():
-            line_chart.add(name, sum)
+    for i in range((entries-15), entries, 1):
+        line_chart.add(month_names[i] + ' ' + str(years[i]), sum_df.iloc[i]['Sum'])
     line_chart.render_to_file(GRAPHS_DIR + file)
 
 def middle_month_line_chart(sum_df, title, file):
-    line_chart = pygal.Line(show_x_labels=False)
+    line_chart = pygal.Line(x_label_rotation=45, show_legend=False)
     line_chart.title = title
-    line_chart.x_labels = sum_df['Date']
+    line_chart.x_labels = sum_df['Date'].dt.date.tail(15)
 
-    # for sum in sum_df.values:
-    #     line_chart.add(sum[0][:-2], sum[2])
-    line_chart.add('12th day', sum_df['Mid-sum'])
+    line_chart.add('', sum_df['Mid-sum'].tail(15))
     line_chart.render_to_file(GRAPHS_DIR + file)
 
 def date_range_slice(df, start, end):
@@ -160,18 +151,6 @@ def calculate_monthly_sums(month_frames, total_monthly_sums):
         monthly_sums.append((bar_name, month_sum))
     return monthly_sums
 
-
-def get_prev_month(date):
-    year = date.split('-')[0]
-    month = date.split('-')[1]
-    if month == '01':
-        return (str(int(year) - 1)) + '-' + '12'
-    elif month == '11' or month == '12':
-        return year + '-' + (str(int(month) - 1))
-    else:
-        return year + '-' + ('0' + str(int(month) - 1))
-
-
 def new_monthly_sums(df):
     # Get list of all unique year/month combinations in dataframe (YYYY-MM).
     list = df['Date'].dt.strftime('%Y-%m').unique().tolist()
@@ -196,24 +175,38 @@ def sums(df, sum_df):
     # Get list of all unique year/month combinations in dataframe (YYYY-MM).
     month_years = df['Date'].dt.strftime('%Y-%m').unique().tolist()
     for month_year in month_years:
-        last_day = '31'
         month = month_year.split('-')[1]
-        year = int(month_year.split('-')[0])
-        prev_month = get_prev_month(month_year)
-        if month == '02':
-            # Check for leap year.
-            if isleap(year):
-                last_day = '29'
-            else:
-                last_day = '28'
-        elif month == '04' or month == '06' or month == '09' or month == '11':
-            last_day = '30'
+        year = month_year.split('-')[0]
+        prev_month = get_prev_month(month, year)
+        last_day = last_day_of_month(month, year)
+
         sum = date_range_slice(df, f'{month_year}-1', f'{month_year}-{last_day}').iloc[:, 1].sum().round(2)
         mid_sum = date_range_slice(df, f'{prev_month}-12', f'{month_year}-12').iloc[:, 1].sum().round(2)
         sum_df = sum_df.append({'Date': month_year + '-1', 'Sum': sum, 'Mid-sum': mid_sum}, ignore_index=True)
     return sum_df
-    # print(new.iloc[:, 1].sum().round(2))
 
+def last_day_of_month(month, year):
+    if month == '02':
+        # Check for leap year.
+        if isleap(int(year)):
+            return '29'
+        else:
+            return '28'
+    elif month == '04' or month == '06' or month == '09' or month == '11':
+        return '30'
+    # If no other special conditions caught then the month must have 31 days.
+    return '31'
+
+def get_prev_month(month, year):
+    # If month is January then return decremented year and December as month.
+    if month == '01':
+        return (str(int(year) - 1)) + '-' + '12'
+    # Don't add leading 0 to prev month if current month is 11 or 12.
+    elif month == '11' or month == '12':
+        return year + '-' + (str(int(month) - 1))
+    # Add leading 0 to month so it's compatible with pandas YYYY-MM-DD format.
+    else:
+        return year + '-' + ('0' + str(int(month) - 1))
 
 def main():
     parser = argparse.ArgumentParser(description='Visualize organzied ' \
@@ -265,10 +258,11 @@ def main():
     # new_monthly_sums(i_df)
     sum_df = sums(i_df, sum_df)
     sum_df = sums(e_df, sum_df)
-    print(sum_df)
     # Combine values for duplicate year/month combinations and sort.
     sum_df = sum_df.groupby('Date', as_index=False).sum().round(2)
-    print(sum_df)
+    # Convert the 'Date' category to pandas datetime format.
+    # Invalid parsing will be set as NaT (missing value).
+    sum_df['Date'] = pd.to_datetime(sum_df['Date'], errors='coerce')
     middle_month_line_chart(sum_df, 'Mid-month sums', 'mid_month_sums.svg')
 
     # total_categories_pie_chart(e_df, 'Expenses Categories Total',
@@ -280,8 +274,7 @@ def main():
     #
     # months_bar_graph(i_monthly_sums, 'Monthly Income', 'monthly_income.svg')
     # months_bar_graph(e_monthly_sums, 'Monthly Expenses', 'monthly_expenses.svg')
-    # combined_months_bar_graph(total_monthly_sums, 'Combined Monthly',
-    #                           'combined_months.svg')
+    combined_months_bar_graph(sum_df, 'Combined Monthly', 'combined_months.svg')
 
 
 if __name__ == "__main__":
