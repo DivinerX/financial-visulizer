@@ -104,19 +104,15 @@ def combined_months_bar_graph(total_monthly_sums, title, file):
             line_chart.add(name, sum)
     line_chart.render_to_file(GRAPHS_DIR + file)
 
-# def middle_month_line_chart(total_monthly_sums, title, file):
-#     line_chart = pygal.Line()
-#     line_chart.title = title
-#     # line_chart.x_labels = ['map(str, range(2002, 2013))']
-#
-#     for month in total_monthly_sums:
-#         print(month[bar])
-    # sliced_i_df = date_range_slice(i_df, '2020-05-12', '2020-06-12')
-    # sliced_e_df = date_range_slice(e_df, '2020-05-12', '2020-06-12')
-    # i_sum = sliced_i_df['Income'].sum().round(2)
-    # e_sum = sliced_e_df['Expense'].sum().round(2)
-    # line_chart.add('May-Jun', i_sum + e_sum)
-    # line_chart.render_to_file(GRAPHS_DIR + file)
+def middle_month_line_chart(sum_df, title, file):
+    line_chart = pygal.Line(show_x_labels=False)
+    line_chart.title = title
+    line_chart.x_labels = sum_df['Date']
+
+    # for sum in sum_df.values:
+    #     line_chart.add(sum[0][:-2], sum[2])
+    line_chart.add('12th day', sum_df['Mid-sum'])
+    line_chart.render_to_file(GRAPHS_DIR + file)
 
 def date_range_slice(df, start, end):
     logging.debug('Entering date_range_slice')
@@ -273,18 +269,19 @@ def main():
     # Combine values for duplicate year/month combinations and sort.
     sum_df = sum_df.groupby('Date', as_index=False).sum().round(2)
     print(sum_df)
+    middle_month_line_chart(sum_df, 'Mid-month sums', 'mid_month_sums.svg')
 
-    total_categories_pie_chart(e_df, 'Expenses Categories Total',
-                               'expense_categories_total.svg')
-    total_categories_pie_chart(i_df, 'Income Categories Total',
-                               'income_categories_total.svg')
-    total_bar_graph(i_df, e_df, 'Total Income, Expenses, and Savings',
-                    'bar_graph.svg')
-
-    months_bar_graph(i_monthly_sums, 'Monthly Income', 'monthly_income.svg')
-    months_bar_graph(e_monthly_sums, 'Monthly Expenses', 'monthly_expenses.svg')
-    combined_months_bar_graph(total_monthly_sums, 'Combined Monthly',
-                              'combined_months.svg')
+    # total_categories_pie_chart(e_df, 'Expenses Categories Total',
+    #                            'expense_categories_total.svg')
+    # total_categories_pie_chart(i_df, 'Income Categories Total',
+    #                            'income_categories_total.svg')
+    # total_bar_graph(i_df, e_df, 'Total Income, Expenses, and Savings',
+    #                 'bar_graph.svg')
+    #
+    # months_bar_graph(i_monthly_sums, 'Monthly Income', 'monthly_income.svg')
+    # months_bar_graph(e_monthly_sums, 'Monthly Expenses', 'monthly_expenses.svg')
+    # combined_months_bar_graph(total_monthly_sums, 'Combined Monthly',
+    #                           'combined_months.svg')
 
 
 if __name__ == "__main__":
