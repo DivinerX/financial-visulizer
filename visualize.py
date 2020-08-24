@@ -98,6 +98,7 @@ def combined_months_bar_graph(sum_df, title, file):
     line_chart.render_to_file(GRAPHS_DIR + file)
 
 def middle_month_line_chart(sum_df, title, file):
+    logging.debug('Entering middle_month_line_chart')
     line_chart = pygal.Line(x_label_rotation=45, show_legend=False)
     line_chart.title = title
     line_chart.x_labels = sum_df['Date'].dt.date.tail(15)
