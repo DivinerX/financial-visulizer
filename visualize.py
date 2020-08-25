@@ -115,66 +115,68 @@ def date_range_slice(df, start, end):
     logging.debug(f'Sliced dataframe:\n{sliced_df}\n')
     return sliced_df
 
-def split_months_into_frames(df):
-    logging.debug('Entering split_months_into_frames')
-    month_frames = []
-    # Convert the 'Date' category to pandas datetime format.
-    # Invalid parsing will be set as NaT (missing value).
-    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
-    years = pd.unique(df['Date'].dt.year)
-    for year in years:
-        year_df = df[df['Date'].dt.year == year]
-        months = pd.unique(year_df['Date'].dt.month)
-        for month in months:
-            month_df = year_df[year_df['Date'].dt.month == month]
-            month_frames.append(month_df)
+# def split_months_into_frames(df):
+#     logging.debug('Entering split_months_into_frames')
+#     month_frames = []
+#     # Convert the 'Date' category to pandas datetime format.
+#     # Invalid parsing will be set as NaT (missing value).
+#     df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+#     years = pd.unique(df['Date'].dt.year)
+#     for year in years:
+#         year_df = df[df['Date'].dt.year == year]
+#         months = pd.unique(year_df['Date'].dt.month)
+#         for month in months:
+#             month_df = year_df[year_df['Date'].dt.month == month]
+#             month_frames.append(month_df)
+#
+#     logging.debug(f'Unique months: {month_frames}')
+#     return month_frames
 
-    logging.debug(f'Unique months: {month_frames}')
-    return month_frames
+# def calculate_monthly_sums(month_frames, total_monthly_sums):
+#     # Monthly sums unique to the dataframe passed in, whether income or expense.
+#     monthly_sums = []
+#     for month in month_frames:
+#         month_sum = month.iloc[:, 1].sum().round(2)
+#         # Reset index for each month frame so I can access index 0 on each.
+#         month = month.reset_index()
+#         # Make each bar name in "Month Year" format.
+#         bar_name = month['Date'].dt.month_name()[0] + ' ' + str(month['Date'].dt.year[0])
+#         # If the month and year already exist then add it to the existing
+#         # dict entry.
+#         if bar_name in total_monthly_sums:
+#             new_sum = (total_monthly_sums[bar_name] + month_sum).round(2)
+#             total_monthly_sums[bar_name] = new_sum
+#         # If the month and year don't exist, create a new dict entry for it.
+#         else:
+#             total_monthly_sums[bar_name] = month_sum
+#         monthly_sums.append((bar_name, month_sum))
+#     return monthly_sums
 
-def calculate_monthly_sums(month_frames, total_monthly_sums):
-    # Monthly sums unique to the dataframe passed in, whether income or expense.
-    monthly_sums = []
-    for month in month_frames:
-        month_sum = month.iloc[:, 1].sum().round(2)
-        # Reset index for each month frame so I can access index 0 on each.
-        month = month.reset_index()
-        # Make each bar name in "Month Year" format.
-        bar_name = month['Date'].dt.month_name()[0] + ' ' + str(month['Date'].dt.year[0])
-        # If the month and year already exist then add it to the existing
-        # dict entry.
-        if bar_name in total_monthly_sums:
-            new_sum = (total_monthly_sums[bar_name] + month_sum).round(2)
-            total_monthly_sums[bar_name] = new_sum
-        # If the month and year don't exist, create a new dict entry for it.
-        else:
-            total_monthly_sums[bar_name] = month_sum
-        monthly_sums.append((bar_name, month_sum))
-    return monthly_sums
-
-def new_monthly_sums(df):
-    # Get list of all unique year/month combinations in dataframe (YYYY-MM).
-    list = df['Date'].dt.strftime('%Y-%m').unique().tolist()
-    print(list)
-    for month_year in list:
-        year = month_year.split('-')[0]
-        month = month_year.split('-')[1]
-        next_month = None
-        if month == '12':
-            next_month = '01'
-            year = str(int(year) + 1)
-        elif month == '09' or month == '10' or month == '11':
-            next_month = str(int(month) + 1)
-        else:
-            next_month = '0' + str(int(month) + 1)
-        next_month_year = year + '-' + next_month
-        print(month_year, next_month_year)
-        print(date_range_slice(df, f'{month_year}-15', f'{next_month_year}-15'))
-    # print(df.loc['2020-07-01':'2020-07-30'])
+# def new_monthly_sums(df):
+#     # Get list of all unique year/month combinations in dataframe (YYYY-MM).
+#     list = df['Date'].dt.strftime('%Y-%m').unique().tolist()
+#     print(list)
+#     for month_year in list:
+#         year = month_year.split('-')[0]
+#         month = month_year.split('-')[1]
+#         next_month = None
+#         if month == '12':
+#             next_month = '01'
+#             year = str(int(year) + 1)
+#         elif month == '09' or month == '10' or month == '11':
+#             next_month = str(int(month) + 1)
+#         else:
+#             next_month = '0' + str(int(month) + 1)
+#         next_month_year = year + '-' + next_month
+#         print(month_year, next_month_year)
+#         print(date_range_slice(df, f'{month_year}-15', f'{next_month_year}-15'))
+#     # print(df.loc['2020-07-01':'2020-07-30'])
 
 def sums(df, sum_df):
     # Get list of all unique year/month combinations in dataframe (YYYY-MM).
     month_years = df['Date'].dt.strftime('%Y-%m').unique().tolist()
+    # List of individual sums, it either be expense or income sums.
+    sum_list = []
     for month_year in month_years:
         month = month_year.split('-')[1]
         year = month_year.split('-')[0]
@@ -183,8 +185,9 @@ def sums(df, sum_df):
 
         sum = date_range_slice(df, f'{month_year}-1', f'{month_year}-{last_day}').iloc[:, 1].sum().round(2)
         mid_sum = date_range_slice(df, f'{prev_month}-12', f'{month_year}-12').iloc[:, 1].sum().round(2)
+        sum_list.append((month_year, sum))
         sum_df = sum_df.append({'Date': month_year + '-1', 'Sum': sum, 'Mid-sum': mid_sum}, ignore_index=True)
-    return sum_df
+    return sum_df, sum_list
 
 def last_day_of_month(month, year):
     if month == '02':
@@ -245,20 +248,22 @@ def main():
         pie_chart_date_range(i_df, f'Income {title}', args.start_date,
                              args.end_date, 'income_date_range.svg')
 
+    i_df['Date'] = pd.to_datetime(i_df['Date'], errors='coerce')
+    e_df['Date'] = pd.to_datetime(e_df['Date'], errors='coerce')
     # Monthly total for income and expenses combined. Gets filled in by the
     # calculate_monthly_sums() method.
     total_monthly_sums = OrderedDict()
     # Mid-sum is the sum of the second half of the previous month + the first
     # half of the current month.
     sum_df = pd.DataFrame(columns=['Date', 'Sum', 'Mid-sum'])
-    i_month_frames = split_months_into_frames(i_df)
-    e_month_frames = split_months_into_frames(e_df)
-    i_monthly_sums = calculate_monthly_sums(i_month_frames, total_monthly_sums)
-    e_monthly_sums = calculate_monthly_sums(e_month_frames, total_monthly_sums)
+    # i_month_frames = split_months_into_frames(i_df)
+    # e_month_frames = split_months_into_frames(e_df)
+    # i_monthly_sums = calculate_monthly_sums(i_month_frames, total_monthly_sums)
+    # e_monthly_sums = calculate_monthly_sums(e_month_frames, total_monthly_sums)
     # print(total_monthly_sums)
     # new_monthly_sums(i_df)
-    sum_df = sums(i_df, sum_df)
-    sum_df = sums(e_df, sum_df)
+    sum_df, i_sums = sums(i_df, sum_df)
+    sum_df, e_sums = sums(e_df, sum_df)
     # Combine values for duplicate year/month combinations and sort.
     sum_df = sum_df.groupby('Date', as_index=False).sum().round(2)
     # Convert the 'Date' category to pandas datetime format.
@@ -266,15 +271,15 @@ def main():
     sum_df['Date'] = pd.to_datetime(sum_df['Date'], errors='coerce')
     middle_month_line_chart(sum_df, 'Mid-month sums', 'mid_month_sums.svg')
 
-    # total_categories_pie_chart(e_df, 'Expenses Categories Total',
-    #                            'expense_categories_total.svg')
-    # total_categories_pie_chart(i_df, 'Income Categories Total',
-    #                            'income_categories_total.svg')
-    # total_bar_graph(i_df, e_df, 'Total Income, Expenses, and Savings',
-    #                 'bar_graph.svg')
-    #
-    # months_bar_graph(i_monthly_sums, 'Monthly Income', 'monthly_income.svg')
-    # months_bar_graph(e_monthly_sums, 'Monthly Expenses', 'monthly_expenses.svg')
+    total_categories_pie_chart(e_df, 'Expenses Categories Total',
+                               'expense_categories_total.svg')
+    total_categories_pie_chart(i_df, 'Income Categories Total',
+                               'income_categories_total.svg')
+    total_bar_graph(i_df, e_df, 'Total Income, Expenses, and Savings',
+                    'bar_graph.svg')
+
+    months_bar_graph(i_sums, 'Monthly Income', 'monthly_income.svg')
+    months_bar_graph(e_sums, 'Monthly Expenses', 'monthly_expenses.svg')
     combined_months_bar_graph(sum_df, 'Combined Monthly', 'combined_months.svg')
 
 
