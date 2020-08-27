@@ -1,6 +1,5 @@
 import argparse
 from calendar import isleap
-from collections import OrderedDict
 import logging
 import os
 from pathlib import Path
@@ -89,19 +88,19 @@ def combined_months_bar_graph(sum_df, title, file):
     line_chart = pygal.Bar()
     line_chart.legend_at_bottom=True
     line_chart.title = title
-    month_names = list(sum_df['Date'].dt.month_name())
-    years = list(sum_df['Date'].dt.year)
+    dates = sum_df['Date'].dt.strftime('%B %Y').tail(15)
     entries = len(sum_df.index)
 
+    # Iterate through the last fifteen rows of the dataframe.
     for i in range((entries-15), entries, 1):
-        line_chart.add(month_names[i] + ' ' + str(years[i]), sum_df.iloc[i]['Sum'])
+        line_chart.add(dates[i], sum_df.iloc[i]['Sum'])
     line_chart.render_to_file(GRAPHS_DIR + file)
 
 def middle_month_line_chart(sum_df, title, file):
     logging.debug('Entering middle_month_line_chart')
     line_chart = pygal.Line(x_label_rotation=45, show_legend=False)
     line_chart.title = title
-    line_chart.x_labels = sum_df['Date'].dt.strftime('%b-%Y').tail(15)
+    line_chart.x_labels = sum_df['Date'].dt.strftime('%b %Y').tail(15)
 
     line_chart.add('', sum_df['Mid-sum'].tail(15))
     line_chart.render_to_file(GRAPHS_DIR + file)
@@ -185,7 +184,7 @@ def main():
                             format=format, datefmt=f'%H:%M:%S')
 
     if args.start_date and args.end_date:
-        title = args.start_date + ' - ' + args.end_date
+        title = args.start_date + ' : ' + args.end_date
         pie_chart_date_range(e_df, f'Expenses {title}', args.start_date,
                              args.end_date, 'expenses_date_range.svg')
         pie_chart_date_range(i_df, f'Income {title}', args.start_date,
