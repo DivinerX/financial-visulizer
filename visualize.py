@@ -154,6 +154,26 @@ def get_prev_month(month, year):
     else:
         return year + '-' + ('0' + str(int(month) - 1))
 
+def create_web_page():
+    html = '''
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Peter Brunner</title>
+</head>
+
+<body>
+    <h1>Test web page</h1>
+</body>
+    '''
+
+    with open('index.html', 'w') as f:
+        f.write(html)
+
 def main():
     parser = argparse.ArgumentParser(description='Visualize organzied ' \
                                      'finances.')
@@ -218,6 +238,7 @@ def main():
     months_bar_graph(e_sums, 'Monthly Expenses', 'monthly_expenses.svg')
     combined_months_bar_graph(sum_df, 'Combined Monthly', 'combined_months.svg')
 
+    create_web_page()
 
 if __name__ == "__main__":
     main()
