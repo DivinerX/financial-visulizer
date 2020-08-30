@@ -39,6 +39,7 @@ def pie_chart_date_range(df, title, start, end, file):
         sum = abs(sliced_df.loc[sliced_df['Category'] == category][type].sum().round(2))
         pie_chart.add(category, sum)
     pie_chart.render_to_file(GRAPHS_DIR + file)
+    return GRAPHS_DIR + file
 
 def total_categories_pie_chart(df, title, file):
     logging.debug('Entering total_categories_pie_chart')
@@ -54,6 +55,7 @@ def total_categories_pie_chart(df, title, file):
         logging.debug(f'Category: {category}, Sum: {sum}')
         pie_chart.add(category, sum)
     pie_chart.render_to_file(GRAPHS_DIR + file)
+    return GRAPHS_DIR + file
 
 def total_bar_graph(i_df, e_df, title, file):
     logging.debug('Entering total_bar_graph')
@@ -72,6 +74,7 @@ def total_bar_graph(i_df, e_df, title, file):
     line_chart.add('Total Expenses', e_sum)
     line_chart.add('Total Savings', savings)
     line_chart.render_to_file(GRAPHS_DIR + file)
+    return GRAPHS_DIR + file
 
 def months_bar_graph(monthly_sums, title, file):
     logging.debug('Entering months_bar_graph')
@@ -83,6 +86,7 @@ def months_bar_graph(monthly_sums, title, file):
     for sum in monthly_sums:
         line_chart.add(sum[0], sum[1])
     line_chart.render_to_file(GRAPHS_DIR + file)
+    return GRAPHS_DIR + file
 
 def combined_months_bar_graph(sum_df, title, file):
     line_chart = pygal.Bar()
@@ -95,6 +99,7 @@ def combined_months_bar_graph(sum_df, title, file):
     for i in range((entries-15), entries, 1):
         line_chart.add(dates[i], sum_df.iloc[i]['Sum'])
     line_chart.render_to_file(GRAPHS_DIR + file)
+    return GRAPHS_DIR + file
 
 def middle_month_line_chart(sum_df, title, file):
     logging.debug('Entering middle_month_line_chart')
@@ -104,6 +109,7 @@ def middle_month_line_chart(sum_df, title, file):
 
     line_chart.add('', sum_df['Mid-sum'].tail(15))
     line_chart.render_to_file(GRAPHS_DIR + file)
+    return GRAPHS_DIR + file
 
 def date_range_slice(df, start, end):
     logging.debug('Entering date_range_slice')
@@ -154,8 +160,11 @@ def get_prev_month(month, year):
     else:
         return year + '-' + ('0' + str(int(month) - 1))
 
-def create_web_page():
-    html = '''
+def create_web_page(graphs):
+    svgs = ""
+    for graph in graphs:
+        svgs = svgs + f'<img src="{graph}">\n'
+    html = f'''
 <!DOCTYPE html>
 <html lang="en-us">
 
@@ -168,6 +177,7 @@ def create_web_page():
 
 <body>
     <h1>Test web page</h1>
+    {svgs}
 </body>
     '''
 
@@ -187,6 +197,7 @@ def main():
                         'for pie chart to end on')
 
     args = parser.parse_args()
+    graphs = []
 
     if not os.path.isdir('graphs'):
         Path('graphs').mkdir(exist_ok=True)
@@ -205,10 +216,12 @@ def main():
 
     if args.start_date and args.end_date:
         title = args.start_date + ' : ' + args.end_date
-        pie_chart_date_range(e_df, f'Expenses {title}', args.start_date,
-                             args.end_date, 'expenses_date_range.svg')
-        pie_chart_date_range(i_df, f'Income {title}', args.start_date,
-                             args.end_date, 'income_date_range.svg')
+        graphs.append(pie_chart_date_range(e_df, f'Expenses {title}',
+                                           args.start_date, args.end_date,
+                                           'expenses_date_range.svg'))
+        graphs.append(pie_chart_date_range(i_df, f'Income {title}',
+                                           args.start_date, args.end_date,
+                                           'income_date_range.svg'))
 
     # Convert the 'Date' category to pandas datetime format.
     # Invalid parsing will be set as NaT (missing value).
@@ -225,20 +238,25 @@ def main():
     # Combine sums for duplicate year/month combinations and sort.
     sum_df = sum_df.groupby('Date', as_index=False).sum().round(2)
 
-    middle_month_line_chart(sum_df, 'Mid-month sums', 'mid_month_sums.svg')
+    graphs.append(middle_month_line_chart(sum_df, 'Mid-month sums',
+                                          'mid_month_sums.svg'))
 
-    total_categories_pie_chart(e_df, 'Expenses Categories Total',
-                               'expense_categories_total.svg')
-    total_categories_pie_chart(i_df, 'Income Categories Total',
-                               'income_categories_total.svg')
-    total_bar_graph(i_df, e_df, 'Total Income, Expenses, and Savings',
-                    'bar_graph.svg')
+    graphs.append(total_categories_pie_chart(e_df, 'Expenses Categories Total',
+                                             'expense_categories_total.svg'))
+    graphs.append(total_categories_pie_chart(i_df, 'Income Categories Total',
+                                             'income_categories_total.svg'))
+    graphs.append(total_bar_graph(i_df, e_df,
+                                  'Total Income, Expenses, and Savings',
+                                  'bar_graph.svg'))
 
-    months_bar_graph(i_sums, 'Monthly Income', 'monthly_income.svg')
-    months_bar_graph(e_sums, 'Monthly Expenses', 'monthly_expenses.svg')
-    combined_months_bar_graph(sum_df, 'Combined Monthly', 'combined_months.svg')
+    graphs.append(months_bar_graph(i_sums, 'Monthly Income',
+                                   'monthly_income.svg'))
+    graphs.append(months_bar_graph(e_sums, 'Monthly Expenses',
+                                   'monthly_expenses.svg'))
+    graphs.append(combined_months_bar_graph(sum_df, 'Combined Monthly',
+                                            'combined_months.svg'))
 
-    create_web_page()
+    create_web_page(graphs)
 
 if __name__ == "__main__":
     main()
