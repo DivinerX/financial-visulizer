@@ -89,6 +89,7 @@ def months_bar_graph(monthly_sums, title, file):
     return GRAPHS_DIR + file
 
 def combined_months_bar_graph(sum_df, title, file):
+    logging.debug('Entering combined_months_bar_graph')
     line_chart = pygal.Bar()
     line_chart.legend_at_bottom=True
     line_chart.title = title
