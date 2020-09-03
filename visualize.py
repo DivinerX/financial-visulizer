@@ -162,6 +162,7 @@ def get_prev_month(month, year):
         return year + '-' + ('0' + str(int(month) - 1))
 
 def create_web_page(graphs):
+    logging.debug('Entering create_web_page')
     svgs = ''
     for graph in graphs:
         with open(graph, 'r') as f:
