@@ -99,6 +99,7 @@ def combined_months_bar_graph(sum_df, title, file):
     # Iterate through the last fifteen rows of the dataframe.
     for i in range((entries-15), entries, 1):
         line_chart.add(dates[i], sum_df.iloc[i]['Sum'])
+    logging.debug(f'Generating report {GRAPHS_DIR + file}')
     line_chart.render_to_file(GRAPHS_DIR + file)
     return GRAPHS_DIR + file
 
