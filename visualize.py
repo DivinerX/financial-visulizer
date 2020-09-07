@@ -135,6 +135,7 @@ def sums(df, sum_df):
 
         sum = date_range_slice(df, f'{month_year}-1', f'{month_year}-{last_day}').iloc[:, 1].sum().round(2)
         mid_sum = date_range_slice(df, f'{prev_month}-12', f'{month_year}-12').iloc[:, 1].sum().round(2)
+        logging.debug(f'Sum: {sum}, Mid-sum: {mid_sum}')
         sum_list.append((month_year, sum))
         sum_df = sum_df.append({'Date': month_year + '-1', 'Sum': sum, 'Mid-sum': mid_sum}, ignore_index=True)
     return sum_df, sum_list
