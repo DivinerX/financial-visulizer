@@ -183,8 +183,9 @@ def create_web_page(graphs):
 </head>
 
 <body>
-    <h1>Test web page</h1>
-    {svgs}
+    <div style="display: block; margin-left: auto; margin-right: auto; width: 80%;">
+        {svgs}
+    </div>
 </body>
     '''
 
