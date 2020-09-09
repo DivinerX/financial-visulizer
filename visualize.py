@@ -9,6 +9,7 @@ import pandas as pd
 import pygal
 
 GRAPHS_DIR = 'graphs/'
+HEADER = '\033[95m'
 OKBLUE = '\033[94m'
 OKGREEN = '\033[92m'
 WARNING = '\033[93m'
@@ -192,43 +193,16 @@ def create_web_page(graphs):
     with open('index.html', 'w') as f:
         f.write(html)
 
-def main():
-    parser = argparse.ArgumentParser(description='Visualize organzied ' \
-                                     'finances.')
-    parser.add_argument('-d', '--debug', action='store_true', help='enable ' \
-                        'debug output')
-    parser.add_argument('income', help='CSV containing income')
-    parser.add_argument('expenses', help='CSV containing expenses')
-    parser.add_argument('-s', '--start_date', help='date in YYYY-MM-DD format ' \
-                        'for pie chart to start from')
-    parser.add_argument('-e', '--end_date', help='date in YYYY-MM-DD format ' \
-                        'for pie chart to end on')
-
-    args = parser.parse_args()
+def create_graphs(i_df, e_df, start_date, end_date):
     graphs = []
 
-    if not os.path.isdir('graphs'):
-        Path('graphs').mkdir(exist_ok=True)
-
-    try:
-        i_df = pd.read_csv(args.income)
-        e_df = pd.read_csv(args.expenses)
-    except FileNotFoundError as e:
-        print(e)
-        sys.exit(1)
-
-    if args.debug:
-        format = f'[{HEADER}%(asctime)s{RESET} - {OKGREEN}%(levelname)s {RESET}] %(message)s'
-        logging.basicConfig(level=logging.DEBUG,
-                            format=format, datefmt=f'%H:%M:%S')
-
-    if args.start_date and args.end_date:
-        title = args.start_date + ' : ' + args.end_date
+    if start_date and end_date:
+        title = start_date + ' : ' + end_date
         graphs.append(pie_chart_date_range(e_df, f'Expenses {title}',
-                                           args.start_date, args.end_date,
+                                           start_date, end_date,
                                            'expenses_date_range.svg'))
         graphs.append(pie_chart_date_range(i_df, f'Income {title}',
-                                           args.start_date, args.end_date,
+                                           start_date, end_date,
                                            'income_date_range.svg'))
 
     # Convert the 'Date' category to pandas datetime format.
@@ -248,7 +222,6 @@ def main():
 
     graphs.append(middle_month_line_chart(sum_df, 'Mid-month sums',
                                           'mid_month_sums.svg'))
-
     graphs.append(total_categories_pie_chart(e_df, 'Expenses Categories Total',
                                              'expense_categories_total.svg'))
     graphs.append(total_categories_pie_chart(i_df, 'Income Categories Total',
@@ -256,13 +229,44 @@ def main():
     graphs.append(total_bar_graph(i_df, e_df,
                                   'Total Income, Expenses, and Savings',
                                   'bar_graph.svg'))
-
     graphs.append(months_bar_graph(i_sums, 'Monthly Income',
                                    'monthly_income.svg'))
     graphs.append(months_bar_graph(e_sums, 'Monthly Expenses',
                                    'monthly_expenses.svg'))
     graphs.append(combined_months_bar_graph(sum_df, 'Combined Monthly',
                                             'combined_months.svg'))
+    return graphs
+
+def main():
+    parser = argparse.ArgumentParser(description='Visualize organzied ' \
+                                     'finances.')
+    parser.add_argument('-d', '--debug', action='store_true', help='enable ' \
+                        'debug output')
+    parser.add_argument('income', help='CSV containing income')
+    parser.add_argument('expenses', help='CSV containing expenses')
+    parser.add_argument('-s', '--start_date', help='date in YYYY-MM-DD format ' \
+                        'for pie chart to start from')
+    parser.add_argument('-e', '--end_date', help='date in YYYY-MM-DD format ' \
+                        'for pie chart to end on')
+
+    args = parser.parse_args()
+
+    if not os.path.isdir('graphs'):
+        Path('graphs').mkdir(exist_ok=True)
+
+    try:
+        i_df = pd.read_csv(args.income)
+        e_df = pd.read_csv(args.expenses)
+    except FileNotFoundError as e:
+        print(e)
+        sys.exit(1)
+
+    if args.debug:
+        format = f'[{HEADER}%(asctime)s{RESET} - {OKGREEN}%(levelname)s {RESET}] %(message)s'
+        logging.basicConfig(level=logging.DEBUG,
+                            format=format, datefmt=f'%H:%M:%S')
+
+    graphs = create_graphs(i_df, e_df, args.start_date, args.end_date)
 
     create_web_page(graphs)
 
