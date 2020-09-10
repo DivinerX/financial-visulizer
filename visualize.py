@@ -7,6 +7,7 @@ import sys
 
 import pandas as pd
 import pygal
+from pygal.style import Style
 
 GRAPHS_DIR = 'graphs/'
 HEADER = '\033[95m'
@@ -21,13 +22,26 @@ MONTHS = {'January': '01', 'February': '02', 'March': '03', 'April': '04',
           'May': '05', 'June': '06', 'July': '07', 'August': '08',
           'September': '09', 'October': '10', 'November': '11',
           'December': '12'}
+PJ_STYLE = Style(
+    background = 'transparent',
+    plot_background = 'rgba(255, 255, 255, 1)',
+    foreground = 'rgba(0, 0, 0, .87)',
+    foreground_strong = 'rgba(0, 0, 0, 1)',
+    foreground_subtle = 'rgba(0, 0, 0, .54)',
+    opacity = '.7',
+    opacity_hover = '.8',
+    transition = '250ms ease-in',
+    colors = ('#F44336', '#3F51B5', '#009688', '#FFC107', '#FF5722', '#9C27B0',
+              '#03A9F4', '#8BC34A', '#FF9800', '#E91E63', '#2196F3', '#4CAF50',
+              '#FFEB3B', '#673AB7', '#00BCD4', '#CDDC39', '#9E9E9E', '#607D8B')
+)
 
 
 def pie_chart_date_range(df, title, start, end, file):
     logging.debug('Entering pie_chart_date_range')
     logging.debug(f'Start: {start}, End: {end}')
     logging.debug(f'Orginal dataframe:\n{df}\n')
-    pie_chart = pygal.Pie()
+    pie_chart = pygal.Pie(style=PJ_STYLE)
     pie_chart.title = title
     # Expense or Income.
     type = df.columns[1]
@@ -44,7 +58,7 @@ def pie_chart_date_range(df, title, start, end, file):
 
 def total_categories_pie_chart(df, title, file):
     logging.debug('Entering total_categories_pie_chart')
-    pie_chart = pygal.Pie()
+    pie_chart = pygal.Pie(style=PJ_STYLE)
     pie_chart.title = title
     # Expense or Income.
     type = df.columns[1]
@@ -60,7 +74,7 @@ def total_categories_pie_chart(df, title, file):
 
 def total_bar_graph(i_df, e_df, title, file):
     logging.debug('Entering total_bar_graph')
-    line_chart = pygal.Bar()
+    line_chart = pygal.Bar(style=PJ_STYLE)
     line_chart.legend_at_bottom=True
     # Make it so the whole legend will be on just one line.
     line_chart.legend_at_bottom_columns=3
@@ -79,7 +93,7 @@ def total_bar_graph(i_df, e_df, title, file):
 
 def months_bar_graph(monthly_sums, title, file):
     logging.debug('Entering months_bar_graph')
-    line_chart = pygal.Bar()
+    line_chart = pygal.Bar(style=PJ_STYLE)
     line_chart.legend_at_bottom=True
     # line_chart.legend_at_bottom_columns=len(month_frames)
     line_chart.title = title
@@ -91,7 +105,7 @@ def months_bar_graph(monthly_sums, title, file):
 
 def combined_months_bar_graph(sum_df, title, file):
     logging.debug('Entering combined_months_bar_graph')
-    line_chart = pygal.Bar()
+    line_chart = pygal.Bar(style=PJ_STYLE)
     line_chart.legend_at_bottom=True
     line_chart.title = title
     dates = sum_df['Date'].dt.strftime('%B %Y').tail(15)
@@ -106,7 +120,8 @@ def combined_months_bar_graph(sum_df, title, file):
 
 def middle_month_line_chart(sum_df, title, file):
     logging.debug('Entering middle_month_line_chart')
-    line_chart = pygal.Line(x_label_rotation=45, show_legend=False)
+    line_chart = pygal.Line(style=PJ_STYLE, x_label_rotation=45,
+                            show_legend=False)
     line_chart.title = title
     line_chart.x_labels = sum_df['Date'].dt.strftime('%b %Y').tail(15)
 
