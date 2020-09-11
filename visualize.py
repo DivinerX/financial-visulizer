@@ -38,10 +38,10 @@ PJ_STYLE = Style(
 
 
 def pie_chart_date_range(df, title, start, end, file):
-    logging.debug('Entering pie_chart_date_range')
+    logging.info('Entering pie_chart_date_range')
     logging.debug(f'Start: {start}, End: {end}')
     logging.debug(f'Orginal dataframe:\n{df}\n')
-    pie_chart = pygal.Pie(style=PJ_STYLE)
+    pie_chart = pygal.Pie(style=PJ_STYLEgit)
     pie_chart.title = title
     # Expense or Income.
     type = df.columns[1]
@@ -57,7 +57,7 @@ def pie_chart_date_range(df, title, start, end, file):
     return GRAPHS_DIR + file
 
 def total_categories_pie_chart(df, title, file):
-    logging.debug('Entering total_categories_pie_chart')
+    logging.info('Entering total_categories_pie_chart')
     pie_chart = pygal.Pie(style=PJ_STYLE)
     pie_chart.title = title
     # Expense or Income.
@@ -73,7 +73,7 @@ def total_categories_pie_chart(df, title, file):
     return GRAPHS_DIR + file
 
 def total_bar_graph(i_df, e_df, title, file):
-    logging.debug('Entering total_bar_graph')
+    logging.info('Entering total_bar_graph')
     line_chart = pygal.Bar(style=PJ_STYLE)
     line_chart.legend_at_bottom=True
     # Make it so the whole legend will be on just one line.
@@ -92,7 +92,7 @@ def total_bar_graph(i_df, e_df, title, file):
     return GRAPHS_DIR + file
 
 def months_bar_graph(monthly_sums, title, file):
-    logging.debug('Entering months_bar_graph')
+    logging.info('Entering months_bar_graph')
     line_chart = pygal.Bar(style=PJ_STYLE)
     line_chart.legend_at_bottom=True
     # line_chart.legend_at_bottom_columns=len(month_frames)
@@ -104,7 +104,7 @@ def months_bar_graph(monthly_sums, title, file):
     return GRAPHS_DIR + file
 
 def combined_months_bar_graph(sum_df, title, file):
-    logging.debug('Entering combined_months_bar_graph')
+    logging.info('Entering combined_months_bar_graph')
     line_chart = pygal.Bar(style=PJ_STYLE)
     line_chart.legend_at_bottom=True
     line_chart.title = title
@@ -119,7 +119,7 @@ def combined_months_bar_graph(sum_df, title, file):
     return GRAPHS_DIR + file
 
 def middle_month_line_chart(sum_df, title, file):
-    logging.debug('Entering middle_month_line_chart')
+    logging.info('Entering middle_month_line_chart')
     line_chart = pygal.Line(style=PJ_STYLE, x_label_rotation=45,
                             show_legend=False)
     line_chart.title = title
@@ -130,7 +130,7 @@ def middle_month_line_chart(sum_df, title, file):
     return GRAPHS_DIR + file
 
 def date_range_slice(df, start, end):
-    logging.debug('Entering date_range_slice')
+    logging.info('Entering date_range_slice')
     logging.debug(f'Start: {start}, End: {end}')
     logging.debug(f'Orginal dataframe:\n{df}\n')
     mask = (df['Date'] >= start) & (df['Date'] <= end)
@@ -180,7 +180,7 @@ def get_prev_month(month, year):
         return year + '-' + ('0' + str(int(month) - 1))
 
 def create_web_page(graphs):
-    logging.debug('Entering create_web_page')
+    logging.info('Entering create_web_page')
     svgs = ''
     for graph in graphs:
         with open(graph, 'r') as f:
@@ -255,8 +255,10 @@ def create_graphs(i_df, e_df, start_date, end_date):
 def main():
     parser = argparse.ArgumentParser(description='Visualize organzied ' \
                                      'finances.')
-    parser.add_argument('-d', '--debug', action='store_true', help='enable ' \
+    parser.add_argument('-i', '--info', action='store_true', help='enable ' \
                         'debug output')
+    parser.add_argument('-d', '--debug', action='store_true', help='enable ' \
+                        'more detailed debug output')
     parser.add_argument('income', help='CSV containing income')
     parser.add_argument('expenses', help='CSV containing expenses')
     parser.add_argument('-s', '--start_date', help='date in YYYY-MM-DD format ' \
@@ -276,8 +278,11 @@ def main():
         print(e)
         sys.exit(1)
 
+    format = f'[{HEADER}%(asctime)s{RESET} - {OKGREEN}%(levelname)s {RESET}] %(message)s'
+    if args.info:
+        logging.basicConfig(level=logging.INFO,
+                            format=format, datefmt=f'%H:%M:%S')
     if args.debug:
-        format = f'[{HEADER}%(asctime)s{RESET} - {OKGREEN}%(levelname)s {RESET}] %(message)s'
         logging.basicConfig(level=logging.DEBUG,
                             format=format, datefmt=f'%H:%M:%S')
 
