@@ -1,5 +1,6 @@
 import argparse
 from calendar import isleap
+from datetime import datetime
 import logging
 import os
 from pathlib import Path
@@ -41,7 +42,7 @@ def pie_chart_date_range(df, title, start, end, file):
     logging.info('Entering pie_chart_date_range')
     logging.debug(f'Start: {start}, End: {end}')
     logging.debug(f'Orginal dataframe:\n{df}\n')
-    pie_chart = pygal.Pie(style=PJ_STYLEgit)
+    pie_chart = pygal.Pie(style=PJ_STYLE)
     pie_chart.title = title
     # Expense or Income.
     type = df.columns[1]
@@ -179,6 +180,19 @@ def get_prev_month(month, year):
     else:
         return year + '-' + ('0' + str(int(month) - 1))
 
+# Taken from https://stackoverflow.com/questions/16870663/how-do-i-validate-a-date-string-format-in-python#answer-37045601
+def validate(date):
+    try:
+        # If only strptime is called leading zeroes don't get checked.
+        if date != datetime.strptime(date, '%Y-%m-%d').strftime('%Y-%m-%d'):
+            # This is a catchall since some error cases throw ValueErrors and
+            # some don't. This way all error cases should return the same thing.
+            raise ValueError
+    except ValueError:
+        print(f'Incorrect date format, "{date}" should be in ' \
+              'YYYY-MM-DD format.')
+        sys.exit(2)
+
 def create_web_page(graphs):
     logging.info('Entering create_web_page')
     svgs = ''
@@ -212,6 +226,8 @@ def create_graphs(i_df, e_df, start_date, end_date):
     graphs = []
 
     if start_date and end_date:
+        validate(start_date)
+        validate(end_date)
         title = start_date + ' : ' + end_date
         graphs.append(pie_chart_date_range(e_df, f'Expenses {title}',
                                            start_date, end_date,
