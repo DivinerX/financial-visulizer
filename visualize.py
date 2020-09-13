@@ -23,6 +23,7 @@ MONTHS = {'January': '01', 'February': '02', 'March': '03', 'April': '04',
           'May': '05', 'June': '06', 'July': '07', 'August': '08',
           'September': '09', 'October': '10', 'November': '11',
           'December': '12'}
+# Same as the default pygal style except with a transparent background.
 PJ_STYLE = Style(
     background = 'transparent',
     plot_background = 'rgba(255, 255, 255, 1)',
