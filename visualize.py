@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import sys
 
+import numpy as np
 import pandas as pd
 import pygal
 from pygal.style import Style
@@ -192,7 +193,7 @@ def validate(date):
     except ValueError:
         print(f'Incorrect date format, "{date}" should be in ' \
               'YYYY-MM-DD format.')
-        sys.exit(2)
+        sys.exit(4)
 
 def create_web_page(graphs):
     logging.info('Entering create_web_page')
@@ -273,7 +274,8 @@ def main():
                         'debug output')
     parser.add_argument('-d', '--debug', action='store_true', help='enable ' \
                         'more detailed debug output')
-    parser.add_argument('income', help='CSV containing income')
+    parser.add_argument('income', help='CSV containing income, this must ' \
+                        'be given before expenses')
     parser.add_argument('expenses', help='CSV containing expenses')
     parser.add_argument('-s', '--start_date', help='date in YYYY-MM-DD format ' \
                         'for pie chart to start from')
@@ -300,6 +302,16 @@ def main():
         logging.basicConfig(level=logging.DEBUG,
                             format=format, datefmt=f'%H:%M:%S')
 
+    # Ensure the income df has no expenses and the expenses df has no income.
+    if not i_df[i_df.select_dtypes(include=[np.number]).le(0).all(1)].empty:
+        print('Income dataframe has negative numbers, exiting. Did you pass ' \
+              'in the income CSV before the expenses CSV? The order matters.')
+        sys.exit(2)
+    if not e_df[e_df.select_dtypes(include=[np.number]).ge(0).all(1)].empty:
+        print('Expenses dataframe has positive numbers, exiting. Did you pass ' \
+              'in the expenses CSV after the income CSV? The order matters.')
+        sys.exit(3)
+        
     graphs = create_graphs(i_df, e_df, args.start_date, args.end_date)
 
     create_web_page(graphs)
