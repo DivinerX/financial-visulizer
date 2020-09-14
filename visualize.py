@@ -198,12 +198,9 @@ def create_web_page(graphs):
     logging.info('Entering create_web_page')
     svgs = ''
     for graph in graphs:
-        with open(graph, 'r') as f:
-            logging.debug(f'Reading contents of "{graph}"')
-            svgs += f.read() + '\n'
+        svgs += f'\n<object type="image/svg+xml" data="{graph}"></object>\n'
 
-    html = f'''
-<!DOCTYPE html>
+    html = f'''<!DOCTYPE html>
 <html lang="en-us">
 
 <head>
