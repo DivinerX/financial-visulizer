@@ -11,6 +11,8 @@ import pandas as pd
 import pygal
 from pygal.style import Style
 
+from budget_info import SALARY
+
 GRAPHS_DIR = 'graphs/'
 HEADER = '\033[95m'
 OKBLUE = '\033[94m'
@@ -212,6 +214,9 @@ def create_web_page(graphs):
 </head>
 
 <body>
+    <div style="text-align: center">
+        <h2>Weekly income: {SALARY/52}</h2>
+    </div>
     <div style="display: block; margin-left: auto; margin-right: auto; width: 80%;">
         {svgs}
     </div>
@@ -311,7 +316,7 @@ def main():
         print('Expenses dataframe has positive numbers, exiting. Did you pass ' \
               'in the expenses CSV after the income CSV? The order matters.')
         sys.exit(3)
-        
+
     graphs = create_graphs(i_df, e_df, args.start_date, args.end_date)
 
     create_web_page(graphs)
