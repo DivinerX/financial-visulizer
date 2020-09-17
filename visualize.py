@@ -11,8 +11,6 @@ import pandas as pd
 import pygal
 from pygal.style import Style
 
-from budget_info import SALARY
-
 GRAPHS_DIR = 'graphs/'
 HEADER = '\033[95m'
 OKBLUE = '\033[94m'
@@ -28,7 +26,7 @@ MONTHS = {'January': '01', 'February': '02', 'March': '03', 'April': '04',
           'December': '12'}
 # Same as the default pygal style except with a transparent background.
 PJ_STYLE = Style(
-    background = 'transparent',
+    background = '#FFF',
     plot_background = 'rgba(255, 255, 255, 1)',
     foreground = 'rgba(0, 0, 0, .87)',
     foreground_strong = 'rgba(0, 0, 0, 1)',
@@ -200,8 +198,17 @@ def validate(date):
 def create_web_page(graphs):
     logging.info('Entering create_web_page')
     svgs = ''
+    index = 0
     for graph in graphs:
-        svgs += f'\n<object type="image/svg+xml" data="{graph}"></object>\n'
+        if index == len(graphs)-1:
+            svgs += '\n    <div style="width:50%; display:block; margin-left: auto; margin-right: auto;">'
+        elif (index % 2) == 0:
+            svgs += '\n    <div style="width:48%; display:block; float:left; margin-right: 0.15em">'
+        else:
+            svgs += '\n    <div style="width:48%; display:block; float:right; margin-left: 0.15em">'
+        svgs += f'\n        <object type="image/svg+xml" data="{graph}"></object>'
+        svgs += '\n    </div>\n'
+        index += 1
 
     html = f'''<!DOCTYPE html>
 <html lang="en-us">
@@ -213,11 +220,8 @@ def create_web_page(graphs):
 	<title>Peter Brunner</title>
 </head>
 
-<body>
-    <div style="text-align: center">
-        <h2>Weekly income: {SALARY/52}</h2>
-    </div>
-    <div style="display: block; margin-left: auto; margin-right: auto; width: 80%;">
+<body style="background: bisque;">
+    <div style="display: block; margin-left: auto; margin-right: auto; width: 90%;">
         {svgs}
     </div>
 </body>
