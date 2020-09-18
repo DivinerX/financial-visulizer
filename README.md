@@ -8,7 +8,7 @@ Written in Python 3.7.7.
 
 ### Dependencies
 
-**numpy** 1.19.0
+**numpy** 1.19.0  
 **pandas** 1.0.5  
 **pygal** 2.4.0   
 
