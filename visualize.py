@@ -24,7 +24,7 @@ MONTHS = {'January': '01', 'February': '02', 'March': '03', 'April': '04',
           'May': '05', 'June': '06', 'July': '07', 'August': '08',
           'September': '09', 'October': '10', 'November': '11',
           'December': '12'}
-# Same as the default pygal style except with a transparent background.
+# Same as the default pygal style except with a white background.
 PJ_STYLE = Style(
     background = '#FFF',
     plot_background = 'rgba(255, 255, 255, 1)',
@@ -198,15 +198,20 @@ def validate(date):
 def create_web_page(graphs):
     logging.info('Entering create_web_page')
     svgs = ''
-    index = 0
+    index = 1
+    box_shadow = 'box-shadow: 0 1px 2px 0 rgba(60,64,67,.3),0 1px 3px 1px rgba(60,64,67,.15);'
     for graph in graphs:
-        if index == len(graphs)-1:
-            svgs += '\n    <div style="width:50%; display:block; margin-left: auto; margin-right: auto;">'
+        # If last graph is an odd number then center it on the page instead
+        # of making go left or right.
+        if index == len(graphs) and (index % 2) != 0:
+            svgs += '\n    <div style="width:48%; display:block; margin-left: auto; margin-right: auto;">'
+        # Put graph on right side of page if it's an even number.
         elif (index % 2) == 0:
-            svgs += '\n    <div style="width:48%; display:block; float:left; margin-right: 0.15em">'
-        else:
             svgs += '\n    <div style="width:48%; display:block; float:right; margin-left: 0.15em">'
-        svgs += f'\n        <object type="image/svg+xml" data="{graph}"></object>'
+        # Number isn't even so put it on left side of page.
+        else:
+            svgs += '\n    <div style="width:48%; display:block; float:left; margin-right: 0.15em">'
+        svgs += f'\n        <object type="image/svg+xml" data="{graph}" style="{box_shadow}"></object>'
         svgs += '\n    </div>\n'
         index += 1
 
