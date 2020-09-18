@@ -3,6 +3,9 @@ __pycache__/
 
 expense*
 income*
+*.backup
 *.csv
 *.svg
 Test*
+
+index.html
