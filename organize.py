@@ -7,7 +7,7 @@ import numpy as np
 import pandas.errors
 import pandas as pd
 
-from TestCategories import E_CATEGORIES, I_CATEGORIES
+from categories import E_CATEGORIES, I_CATEGORIES
 
 # Terminal color codes.
 BOLD = '\033[1m'
