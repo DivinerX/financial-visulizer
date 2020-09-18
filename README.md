@@ -1,6 +1,6 @@
 # finance-visualizer
 
-Last edited 7/18/2020
+Last edited 9/17/2020
 
 #### Version
 
@@ -8,14 +8,15 @@ Written in Python 3.7.7.
 
 ### Dependencies
 
+**numpy** 1.19.0
 **pandas** 1.0.5  
 **pygal** 2.4.0   
-**pytest** 5.4.3
 
 ## What is it?
 
-A script to give a variable number of CSV files containing unorganized financial transactions to which will be organized into two CSVs, one for income, and another for expenses.
+**organize.py**: A script to give a variable number of CSV files containing unorganized financial transactions which will be organized into two CSVs, one for income, and another for expenses.
 
-##### TODO:
+**categories.py**: File where you add the expense and income categories for organize.py to use when classifying/categorizing your transactions.
 
-Input organized income and expense CSVs and a graph will be created.
+**visualize.py**: A script to take the cleaned up transactions from the organize script and create SVG graphs to visualize the data. The graphs are then put in
+a generated HTML file which can be opened locally in your browser.
