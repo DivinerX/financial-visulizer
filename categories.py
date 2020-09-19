@@ -1,13 +1,13 @@
 E_CATEGORIES = {
-1: 'Expense',
-2: 'Car payment',
-3: 'Childcare',
-4: 'Clothing',
-5: 'Condo fees'
+1: 'Car',
+2: 'Medical',
+3: 'Food',
+4: 'Hygiene',
+5: 'Dog'
 }
 
 I_CATEGORIES = {
-1: 'Income',
-2: 'Payment',
+1: 'Job',
+2: 'Gift',
 3: 'Reimbursement'
 }
