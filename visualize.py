@@ -114,9 +114,17 @@ def combined_months_bar_graph(sum_df, title, file):
     dates = sum_df['Date'].dt.strftime('%B %Y').tail(15)
     entries = len(sum_df.index)
 
-    # Iterate through the last fifteen rows of the dataframe.
-    for i in range((entries-15), entries, 1):
-        line_chart.add(dates[i], sum_df.iloc[i]['Sum'])
+    if entries < 15 and entries >= 0:
+        for i in range(entries):
+            line_chart.add(dates[i], sum_df.iloc[i]['Sum'])
+    elif entries >= 15:
+        # Iterate through the last fifteen rows of the dataframe if possible.
+        for i in range((entries-15), entries, 1):
+            line_chart.add(dates[i], sum_df.iloc[i]['Sum'])
+    else:
+        print(f'Invalid number "{entries}" passed to combined_months_bar_graph.')
+        sys.exit(5)
+
     logging.debug(f'Generating report {GRAPHS_DIR + file}')
     line_chart.render_to_file(GRAPHS_DIR + file)
     return GRAPHS_DIR + file
