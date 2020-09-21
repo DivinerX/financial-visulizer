@@ -114,6 +114,7 @@ def combined_months_bar_graph(sum_df, title, file):
     dates = sum_df['Date'].dt.strftime('%B %Y').tail(15)
     entries = len(sum_df.index)
 
+    # TODO: test what happens when no entries are passed to this method or others
     if entries < 15 and entries >= 0:
         for i in range(entries):
             line_chart.add(dates[i], sum_df.iloc[i]['Sum'])
@@ -123,7 +124,7 @@ def combined_months_bar_graph(sum_df, title, file):
             line_chart.add(dates[i], sum_df.iloc[i]['Sum'])
     else:
         print(f'Invalid number "{entries}" passed to combined_months_bar_graph.')
-        sys.exit(5)
+        sys.exit(8)
 
     logging.debug(f'Generating report {GRAPHS_DIR + file}')
     line_chart.render_to_file(GRAPHS_DIR + file)
@@ -191,7 +192,7 @@ def get_prev_month(month, year):
         return year + '-' + ('0' + str(int(month) - 1))
 
 # Taken from https://stackoverflow.com/questions/16870663/how-do-i-validate-a-date-string-format-in-python#answer-37045601
-def validate(date):
+def validate_date(date):
     try:
         # If only strptime is called leading zeroes don't get checked.
         if date != datetime.strptime(date, '%Y-%m-%d').strftime('%Y-%m-%d'):
@@ -201,7 +202,7 @@ def validate(date):
     except ValueError:
         print(f'Incorrect date format, "{date}" should be in ' \
               'YYYY-MM-DD format.')
-        sys.exit(4)
+        sys.exit(7)
 
 def create_web_page(graphs):
     logging.info('Entering create_web_page')
@@ -247,8 +248,8 @@ def create_graphs(i_df, e_df, start_date, end_date):
     graphs = []
 
     if start_date and end_date:
-        validate(start_date)
-        validate(end_date)
+        validate_date(start_date)
+        validate_date(end_date)
         title = start_date + ' : ' + end_date
         graphs.append(pie_chart_date_range(e_df, f'Expenses {title}',
                                            start_date, end_date,
@@ -315,6 +316,16 @@ def main():
     except FileNotFoundError as e:
         print(e)
         sys.exit(1)
+    except pd.errors.EmptyDataError as e:
+        print(e)
+        sys.exit(2)
+
+    if i_df.empty:
+        print('Income CSV has no data.')
+        sys.exit(3)
+    if e_df.empty:
+        print('Expenses CSV has no data.')
+        sys.exit(4)
 
     format = f'[{HEADER}%(asctime)s{RESET} - {OKGREEN}%(levelname)s {RESET}] %(message)s'
     if args.info:
@@ -326,13 +337,11 @@ def main():
 
     # Ensure the income df has no expenses and the expenses df has no income.
     if not i_df[i_df.select_dtypes(include=[np.number]).le(0).all(1)].empty:
-        print('Income dataframe has negative numbers, exiting. Did you pass ' \
-              'in the income CSV before the expenses CSV? The order matters.')
-        sys.exit(2)
+        print('Income dataframe contains expense(s).')
+        sys.exit(5)
     if not e_df[e_df.select_dtypes(include=[np.number]).ge(0).all(1)].empty:
-        print('Expenses dataframe has positive numbers, exiting. Did you pass ' \
-              'in the expenses CSV after the income CSV? The order matters.')
-        sys.exit(3)
+        print('Expenses dataframe contains income.')
+        sys.exit(6)
 
     graphs = create_graphs(i_df, e_df, args.start_date, args.end_date)
 
