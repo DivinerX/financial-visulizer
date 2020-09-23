@@ -126,7 +126,7 @@ def combined_months_bar_graph(sum_df, title, file):
         print(f'Invalid number "{entries}" passed to combined_months_bar_graph.')
         sys.exit(8)
 
-    logging.debug(f'Generating report {GRAPHS_DIR + file}')
+    logging.info(f'Generating report {GRAPHS_DIR + file}\n')
     line_chart.render_to_file(GRAPHS_DIR + file)
     return GRAPHS_DIR + file
 
@@ -138,16 +138,14 @@ def middle_month_line_chart(sum_df, title, file):
     line_chart.x_labels = sum_df['Date'].dt.strftime('%b %Y').tail(15)
 
     line_chart.add('', sum_df['Mid-sum'].tail(15))
+    logging.info(f'Generating report {GRAPHS_DIR + file}\n')
     line_chart.render_to_file(GRAPHS_DIR + file)
     return GRAPHS_DIR + file
 
 def date_range_slice(df, start, end):
-    logging.info('Entering date_range_slice')
-    logging.debug(f'Start: {start}, End: {end}')
-    logging.debug(f'Orginal dataframe:\n{df}\n')
+    logging.debug(f'date_range_slice - Start: {start}, End: {end}')
     mask = (df['Date'] >= start) & (df['Date'] <= end)
     sliced_df = df.loc[mask]
-    logging.debug(f'Sliced dataframe:\n{sliced_df}\n')
     return sliced_df
 
 def sums(df, sum_df):
