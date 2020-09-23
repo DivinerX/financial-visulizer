@@ -56,6 +56,7 @@ def pie_chart_date_range(df, title, start, end, file):
         # Sum all transactions of the current category.
         sum = abs(sliced_df.loc[sliced_df['Category'] == category][type].sum().round(2))
         pie_chart.add(category, sum)
+    logging.info(f'Generating report {GRAPHS_DIR + file}\n')
     pie_chart.render_to_file(GRAPHS_DIR + file)
     return GRAPHS_DIR + file
 
@@ -72,6 +73,7 @@ def total_categories_pie_chart(df, title, file):
         sum = abs(df.loc[df['Category'] == category][type].sum().round(2))
         logging.debug(f'Category: {category}, Sum: {sum}')
         pie_chart.add(category, sum)
+    logging.info(f'Generating report {GRAPHS_DIR + file}\n')
     pie_chart.render_to_file(GRAPHS_DIR + file)
     return GRAPHS_DIR + file
 
@@ -91,6 +93,7 @@ def total_bar_graph(i_df, e_df, title, file):
     line_chart.add('Total Income', i_sum)
     line_chart.add('Total Expenses', e_sum)
     line_chart.add('Total Savings', savings)
+    logging.info(f'Generating report {GRAPHS_DIR + file}\n')
     line_chart.render_to_file(GRAPHS_DIR + file)
     return GRAPHS_DIR + file
 
@@ -103,6 +106,8 @@ def months_bar_graph(monthly_sums, title, file):
 
     for sum in monthly_sums:
         line_chart.add(sum[0], sum[1])
+
+    logging.info(f'Generating report {GRAPHS_DIR + file}\n')
     line_chart.render_to_file(GRAPHS_DIR + file)
     return GRAPHS_DIR + file
 
@@ -240,6 +245,7 @@ def create_web_page(graphs):
     '''
 
     with open('index.html', 'w') as f:
+        logging.info('Writing HTML to index.html')
         f.write(html)
 
 def create_graphs(i_df, e_df, start_date, end_date):
