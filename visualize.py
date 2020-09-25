@@ -294,7 +294,7 @@ def create_graphs(i_df, e_df, start_date, end_date):
                                             'combined_months.svg'))
     return graphs
 
-def main():
+def get_args():
     parser = argparse.ArgumentParser(description='Visualize organzied ' \
                                      'finances.')
     parser.add_argument('-i', '--info', action='store_true', help='enable ' \
@@ -309,7 +309,10 @@ def main():
     parser.add_argument('-e', '--end_date', help='date in YYYY-MM-DD format ' \
                         'for pie chart to end on')
 
-    args = parser.parse_args()
+    return parser.parse_args()
+
+def main():
+    args = get_args()
 
     if not os.path.isdir('graphs'):
         Path('graphs').mkdir(exist_ok=True)
