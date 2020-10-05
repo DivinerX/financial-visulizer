@@ -133,7 +133,6 @@ def fill_remaining_columns(df, category_dict):
     categories = []
     recipients = []
     descriptions = []
-    type = None
     for index, row in df.iterrows():
         if SKIP_INPUT:
             categories.append('NaN')
