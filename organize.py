@@ -169,7 +169,7 @@ def get_input(df, category_dict, categories, recipients, descriptions):
     # Get the third column name, it'll either be 'To' or 'From'.
     to_from = input(f'{df.columns[2]}: ')
     # While the input is an empty string or whitespace, ask for input again.
-    while to_from is '' or to_from.isspace():
+    while to_from == '' or to_from.isspace():
         to_from = input('Please enter a value, any value: ')
     recipients.append(to_from)
     descriptions.append(input('(Optional) Description: '))
@@ -237,9 +237,9 @@ def main():
     global SKIP_INPUT
     SKIP_INPUT = args.skip_input
 
-    assert args.income_file is not '' and not args.income_file.isspace()
-    assert args.expenses_file is not '' and not args.expenses_file.isspace()
-    assert args.write_mode is not '' and not args.write_mode.isspace()
+    assert args.income_file != '' and not args.income_file.isspace()
+    assert args.expenses_file != '' and not args.expenses_file.isspace()
+    assert args.write_mode != '' and not args.write_mode.isspace()
 
     income, expenses = organize_data(args.exceptions, args.files)
 
