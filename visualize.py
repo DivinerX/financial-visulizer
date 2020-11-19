@@ -147,6 +147,9 @@ def middle_month_line_chart(sum_df, title, file):
     line_chart.render_to_file(GRAPHS_DIR + file)
     return GRAPHS_DIR + file
 
+def category_over_time_chart():
+    pass
+
 def date_range_slice(df, start, end):
     logging.debug(f'date_range_slice - Start: {start}, End: {end}')
     mask = (df['Date'] >= start) & (df['Date'] <= end)
