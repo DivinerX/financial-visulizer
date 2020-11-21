@@ -352,6 +352,13 @@ def main():
         print('Expenses dataframe contains income.')
         sys.exit(6)
 
+    unique_i_categories = set(pd.unique(i_df['Category']))
+    unique_e_categories = set(pd.unique(e_df['Category']))
+    if args.category:
+        if args.category not in unique_i_categories and args.category not in unique_e_categories:
+            print(f'Invalid category: "{args.category}".')
+            sys.exit(7)
+
     graphs = create_graphs(i_df, e_df, args.start_date, args.end_date)
 
     create_web_page(graphs)
