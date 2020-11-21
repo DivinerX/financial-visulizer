@@ -308,6 +308,8 @@ def get_args():
                         'for pie chart to start from')
     parser.add_argument('-e', '--end_date', help='date in YYYY-MM-DD format ' \
                         'for pie chart to end on')
+    parser.add_argument('-c', '--category', help='generate monthly sums only for ' \
+                        'for the given category; categories are found in categories.py')
 
     return parser.parse_args()
 
