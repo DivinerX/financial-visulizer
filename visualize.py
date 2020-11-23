@@ -248,7 +248,7 @@ def create_web_page(graphs):
         logging.info('Writing HTML to index.html')
         f.write(html)
 
-def create_graphs(i_df, e_df, start_date, end_date):
+def create_graphs(i_df, e_df, start_date, end_date, i_categories, e_categories):
     graphs = []
 
     if start_date and end_date:
@@ -359,7 +359,8 @@ def main():
             print(f'Invalid category: "{args.category}".')
             sys.exit(7)
 
-    graphs = create_graphs(i_df, e_df, args.start_date, args.end_date)
+    graphs = create_graphs(i_df, e_df, args.start_date, args.end_date,
+                           unique_i_categories, unique_e_categories)
 
     create_web_page(graphs)
 
