@@ -147,6 +147,9 @@ def middle_month_line_chart(sum_df, title, file):
     line_chart.render_to_file(GRAPHS_DIR + file)
     return GRAPHS_DIR + file
 
+def category_over_time_chart(df, category, title, file):
+    pass
+
 def date_range_slice(df, start, end):
     logging.debug(f'date_range_slice - Start: {start}, End: {end}')
     mask = (df['Date'] >= start) & (df['Date'] <= end)
@@ -248,7 +251,7 @@ def create_web_page(graphs):
         logging.info('Writing HTML to index.html')
         f.write(html)
 
-def create_graphs(i_df, e_df, start_date, end_date, i_categories, e_categories):
+def create_graphs(i_df, e_df, start_date, end_date, category):
     graphs = []
 
     if start_date and end_date:
@@ -261,6 +264,13 @@ def create_graphs(i_df, e_df, start_date, end_date, i_categories, e_categories):
         graphs.append(pie_chart_date_range(i_df, f'Income {title}',
                                            start_date, end_date,
                                            'income_date_range.svg'))
+                                        
+    unique_i_categories = set(pd.unique(i_df['Category']))
+    unique_e_categories = set(pd.unique(e_df['Category']))
+    if category:
+        if category not in unique_i_categories and category not in unique_e_categories:
+            print(f'Invalid category: "{category}".')
+            sys.exit(8)
 
     # Convert the 'Date' category to pandas datetime format.
     # Invalid parsing will be set as NaT (missing value).
@@ -352,15 +362,7 @@ def main():
         print('Expenses dataframe contains income.')
         sys.exit(6)
 
-    unique_i_categories = set(pd.unique(i_df['Category']))
-    unique_e_categories = set(pd.unique(e_df['Category']))
-    if args.category:
-        if args.category not in unique_i_categories and args.category not in unique_e_categories:
-            print(f'Invalid category: "{args.category}".')
-            sys.exit(7)
-
-    graphs = create_graphs(i_df, e_df, args.start_date, args.end_date,
-                           unique_i_categories, unique_e_categories)
+    graphs = create_graphs(i_df, e_df, args.start_date, args.end_date, args.category)
 
     create_web_page(graphs)
 
