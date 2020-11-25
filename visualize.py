@@ -151,6 +151,7 @@ def category_over_time_chart(df, category, title, file):
     logging.info('Entering category_over_time_chart')
     line_chart = pygal.Line(style=PJ_STYLE, x_label_rotation=45,
                             show_legend=False)
+    line_chart.title = title
 
 def date_range_slice(df, start, end):
     logging.debug(f'date_range_slice - Start: {start}, End: {end}')
