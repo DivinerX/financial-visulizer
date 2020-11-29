@@ -275,7 +275,11 @@ def create_graphs(i_df, e_df, start_date, end_date, category):
     unique_i_categories = set(pd.unique(i_df['Category']))
     unique_e_categories = set(pd.unique(e_df['Category']))
     if category:
-        if category not in unique_i_categories and category not in unique_e_categories:
+        if category not in unique_i_categories:
+            pass
+        elif category not in unique_e_categories:
+            pass
+        else:
             print(f'Invalid category: "{category}".')
             sys.exit(8)
 
