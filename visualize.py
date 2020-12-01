@@ -181,6 +181,9 @@ def sums(df, sum_df):
         sum_df = sum_df.append({'Date': month_year + '-1', 'Sum': sum, 'Mid-sum': mid_sum}, ignore_index=True)
     return sum_df, sum_list
 
+def get_category_sums(df):
+    pass
+
 def last_day_of_month(month, year):
     if month == '02':
         # Check for leap year.
@@ -275,10 +278,10 @@ def create_graphs(i_df, e_df, start_date, end_date, category):
     unique_i_categories = set(pd.unique(i_df['Category']))
     unique_e_categories = set(pd.unique(e_df['Category']))
     if category:
-        if category not in unique_i_categories:
-            pass
-        elif category not in unique_e_categories:
-            pass
+        if category in unique_i_categories:
+            get_category_sums(i_df)
+        elif category in unique_e_categories:
+            get_category_sums(e_df)
         else:
             print(f'Invalid category: "{category}".')
             sys.exit(8)
