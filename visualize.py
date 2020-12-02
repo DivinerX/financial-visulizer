@@ -163,6 +163,12 @@ def date_range_slice(df, start, end):
     sliced_df = df.loc[mask]
     return sliced_df
 
+def category_date_range_slice(df, start, end, category):
+    logging.debug(f'date_range_slice - Start: {start}, End: {end}')
+    mask = (df['Date'] >= start) & (df['Date'] <= end) & (df['Category'] == category)
+    sliced_df = df.loc[mask]
+    return sliced_df
+
 def sums(df, sum_df):
     # Get list of all unique year/month combinations in dataframe (YYYY-MM).
     month_years = df['Date'].dt.strftime('%Y-%m').unique().tolist()
@@ -182,7 +188,7 @@ def sums(df, sum_df):
     return sum_df, sum_list
 
 def get_category_sums(df):
-    pass
+    print(category_date_range_slice(df, '2020-10-01', '2020-10-30', 'Fast food'))
 
 def last_day_of_month(month, year):
     if month == '02':
@@ -360,7 +366,7 @@ def main():
         print('Expenses CSV has no data.')
         sys.exit(4)
 
-    format = f'[{HEADER}%(asctime)s{RESET} - {OKGREEN}%(levelname)s {RESET}] %(message)s'
+    format = f'[ {HEADER}%(asctime)s{RESET} - {OKGREEN}%(levelname)s {RESET}] %(message)s'
     if args.info:
         logging.basicConfig(level=logging.INFO,
                             format=format, datefmt=f'%H:%M:%S')
