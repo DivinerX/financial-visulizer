@@ -157,18 +157,16 @@ def category_over_time_chart(df, category, title, file):
     line_chart.render_to_file(GRAPHS_DIR + file)
     return GRAPHS_DIR + file
 
-def date_range_slice(df, start, end):
+def date_range_slice(df, start, end, category=None):
     logging.debug(f'date_range_slice - Start: {start}, End: {end}')
-    mask = (df['Date'] >= start) & (df['Date'] <= end)
+    if category:
+        mask = (df['Date'] >= start) & (df['Date'] <= end) & (df['Category'] == category)
+    else:
+        mask = (df['Date'] >= start) & (df['Date'] <= end)
     sliced_df = df.loc[mask]
     return sliced_df
 
-def category_date_range_slice(df, start, end, category):
-    logging.debug(f'date_range_slice - Start: {start}, End: {end}')
-    mask = (df['Date'] >= start) & (df['Date'] <= end) & (df['Category'] == category)
-    sliced_df = df.loc[mask]
-    return sliced_df
-
+# Break up method to make more general
 def sums(df, sum_df):
     # Get list of all unique year/month combinations in dataframe (YYYY-MM).
     month_years = df['Date'].dt.strftime('%Y-%m').unique().tolist()
@@ -188,7 +186,7 @@ def sums(df, sum_df):
     return sum_df, sum_list
 
 def get_category_sums(df):
-    print(category_date_range_slice(df, '2020-10-01', '2020-10-30', 'Fast food'))
+    print(date_range_slice(df, '2020-10-01', '2020-10-30', 'Fast food'))
 
 def last_day_of_month(month, year):
     if month == '02':
@@ -331,6 +329,8 @@ def get_args():
                         'debug output')
     parser.add_argument('-d', '--debug', action='store_true', help='enable ' \
                         'more detailed debug output')
+    parser.add_argument('-c', '--category', help='generate monthly sums only for ' \
+                        'for the given category; categories are found in categories.py')
     parser.add_argument('income', help='CSV containing income, this must ' \
                         'be given before expenses')
     parser.add_argument('expenses', help='CSV containing expenses')
@@ -338,9 +338,6 @@ def get_args():
                         'for pie chart to start from')
     parser.add_argument('-e', '--end_date', help='date in YYYY-MM-DD format ' \
                         'for pie chart to end on')
-    parser.add_argument('-c', '--category', help='generate monthly sums only for ' \
-                        'for the given category; categories are found in categories.py')
-
     return parser.parse_args()
 
 def main():
