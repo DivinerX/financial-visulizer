@@ -147,14 +147,17 @@ def middle_month_line_chart(sum_df, title, file):
     line_chart.render_to_file(GRAPHS_DIR + file)
     return GRAPHS_DIR + file
 
-def category_over_time_chart(df, category, title, file):
+def category_over_time_chart(category_sums, title, file):
     logging.info('Entering category_over_time_chart')
-    line_chart = pygal.Line(style=PJ_STYLE, x_label_rotation=45,
-                            show_legend=False)
-    line_chart.title = title
+    bar_chart = pygal.Bar(style=PJ_STYLE)
+    bar_chart.title = title
+    bar_chart.legend_at_bottom=True
+
+    for category_sum in category_sums:
+        bar_chart.add(category_sum[0], category_sum[1])
 
     logging.info(f'Generating report {GRAPHS_DIR + file}\n')
-    line_chart.render_to_file(GRAPHS_DIR + file)
+    bar_chart.render_to_file(GRAPHS_DIR + file)
     return GRAPHS_DIR + file
 
 def date_range_slice(df, start, end, category=None):
@@ -325,6 +328,9 @@ def create_graphs(i_df, e_df, start_date, end_date, category):
                                    'monthly_expenses.svg'))
     graphs.append(combined_months_bar_graph(sum_df, 'Combined Monthly',
                                             'combined_months.svg'))
+    if category:
+        graphs.append(category_over_time_chart(category_sums, category,
+                                               f'monthly_{category.lower()}.svg'))
     return graphs
 
 def get_args():
