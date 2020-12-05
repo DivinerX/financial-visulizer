@@ -166,12 +166,12 @@ def date_range_slice(df, start, end, category=None):
     sliced_df = df.loc[mask]
     return sliced_df
 
-# Break up method to make more general
-def sums(df, sum_df):
+def sums(df, sum_df, category=None):
     # Get list of all unique year/month combinations in dataframe (YYYY-MM).
     month_years = df['Date'].dt.strftime('%Y-%m').unique().tolist()
     # List of individual sums, it either be expense or income sums.
     sum_list = []
+    category_sum_list = []
     for month_year in month_years:
         month = month_year.split('-')[1]
         year = month_year.split('-')[0]
@@ -183,10 +183,13 @@ def sums(df, sum_df):
         logging.debug(f'Sum: {sum}, Mid-sum: {mid_sum}')
         sum_list.append((month_year, sum))
         sum_df = sum_df.append({'Date': month_year + '-1', 'Sum': sum, 'Mid-sum': mid_sum}, ignore_index=True)
-    return sum_df, sum_list
-
-def get_category_sums(df):
-    print(date_range_slice(df, '2020-10-01', '2020-10-30', 'Fast food'))
+        if category:
+            category_sum = date_range_slice(df, f'{month_year}-1', f'{month_year}-{last_day}', category).iloc[:, 1].sum().round(2)
+            category_sum_list.append((month_year, category_sum))
+    if category:
+        return sum_df, sum_list, category_sum_list
+    else:
+        return sum_df, sum_list
 
 def last_day_of_month(month, year):
     if month == '02':
@@ -268,6 +271,13 @@ def create_web_page(graphs):
 def create_graphs(i_df, e_df, start_date, end_date, category):
     graphs = []
 
+    unique_i_categories = set(pd.unique(i_df['Category']))
+    unique_e_categories = set(pd.unique(e_df['Category']))
+    if category:
+        if category not in unique_e_categories and category not in unique_i_categories:
+            print(f'Invalid category: "{category}".')
+            sys.exit(8)
+
     if start_date and end_date:
         validate_date(start_date)
         validate_date(end_date)
@@ -279,16 +289,6 @@ def create_graphs(i_df, e_df, start_date, end_date, category):
                                            start_date, end_date,
                                            'income_date_range.svg'))
                                         
-    unique_i_categories = set(pd.unique(i_df['Category']))
-    unique_e_categories = set(pd.unique(e_df['Category']))
-    if category:
-        if category in unique_i_categories:
-            get_category_sums(i_df)
-        elif category in unique_e_categories:
-            get_category_sums(e_df)
-        else:
-            print(f'Invalid category: "{category}".')
-            sys.exit(8)
 
     # Convert the 'Date' category to pandas datetime format.
     # Invalid parsing will be set as NaT (missing value).
@@ -298,8 +298,13 @@ def create_graphs(i_df, e_df, start_date, end_date, category):
     # Mid-sum is the sum of the second half of the previous month + the first
     # half of the current month.
     sum_df = pd.DataFrame(columns=['Date', 'Sum', 'Mid-sum'])
-    sum_df, i_sums = sums(i_df, sum_df)
-    sum_df, e_sums = sums(e_df, sum_df)
+    if category:
+        sum_df, i_sums, category_sums = sums(i_df, sum_df, category)
+        sum_df, e_sums, category_sums = sums(e_df, sum_df, category)
+    else:
+        # pylint: disable=unbalanced-tuple-unpacking
+        sum_df, i_sums = sums(i_df, sum_df)
+        sum_df, e_sums = sums(e_df, sum_df)
 
     sum_df['Date'] = pd.to_datetime(sum_df['Date'], errors='coerce')
     # Combine sums for duplicate year/month combinations and sort.
