@@ -1,3 +1,4 @@
+# pylint: disable=unbalanced-tuple-unpacking
 import argparse
 from calendar import isleap
 from datetime import datetime
@@ -302,10 +303,13 @@ def create_graphs(i_df, e_df, start_date, end_date, category):
     # half of the current month.
     sum_df = pd.DataFrame(columns=['Date', 'Sum', 'Mid-sum'])
     if category:
-        sum_df, i_sums, category_sums = sums(i_df, sum_df, category)
-        sum_df, e_sums, category_sums = sums(e_df, sum_df, category)
+        if category in unique_i_categories:
+            sum_df, i_sums, category_sums = sums(i_df, sum_df, category)
+            sum_df, e_sums = sums(e_df, sum_df)
+        else:
+            sum_df, e_sums, category_sums = sums(e_df, sum_df, category)
+            sum_df, i_sums = sums(i_df, sum_df)
     else:
-        # pylint: disable=unbalanced-tuple-unpacking
         sum_df, i_sums = sums(i_df, sum_df)
         sum_df, e_sums = sums(e_df, sum_df)
 
