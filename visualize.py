@@ -355,12 +355,7 @@ def get_args():
                         'for pie chart to end on')
     return parser.parse_args()
 
-def main():
-    args = get_args()
-
-    if not os.path.isdir('graphs'):
-        Path('graphs').mkdir(exist_ok=True)
-
+def check_args(args):
     try:
         i_df = pd.read_csv(args.income)
         e_df = pd.read_csv(args.expenses)
@@ -378,14 +373,6 @@ def main():
         print('Expenses CSV has no data.')
         sys.exit(4)
 
-    format = f'[ {HEADER}%(asctime)s{RESET} - {OKGREEN}%(levelname)s {RESET}] %(message)s'
-    if args.info:
-        logging.basicConfig(level=logging.INFO,
-                            format=format, datefmt=f'%H:%M:%S')
-    if args.debug:
-        logging.basicConfig(level=logging.DEBUG,
-                            format=format, datefmt=f'%H:%M:%S')
-
     # Ensure the income df has no expenses and the expenses df has no income.
     if not i_df[i_df.select_dtypes(include=[np.number]).le(0).all(1)].empty:
         print('Income dataframe contains expense(s).')
@@ -393,6 +380,24 @@ def main():
     if not e_df[e_df.select_dtypes(include=[np.number]).ge(0).all(1)].empty:
         print('Expenses dataframe contains income.')
         sys.exit(6)
+
+    return i_df, e_df
+
+def main():
+    args = get_args()
+
+    i_df, e_df = check_args(args)
+
+    if not os.path.isdir('graphs'):
+        Path('graphs').mkdir(exist_ok=True)
+
+    format = f'[ {HEADER}%(asctime)s{RESET} - {OKGREEN}%(levelname)s {RESET}] %(message)s'
+    if args.info:
+        logging.basicConfig(level=logging.INFO,
+                            format=format, datefmt=f'%H:%M:%S')
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG,
+                            format=format, datefmt=f'%H:%M:%S')
 
     graphs = create_graphs(i_df, e_df, args.start_date, args.end_date, args.category)
 
