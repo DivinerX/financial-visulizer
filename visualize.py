@@ -12,6 +12,8 @@ import pandas as pd
 import pygal
 from pygal.style import Style
 
+from grapher import Grapher
+
 GRAPHS_DIR = 'graphs/'
 HEADER = '\033[95m'
 OKBLUE = '\033[94m'
