@@ -12,6 +12,7 @@ import pandas as pd
 import pygal
 from pygal.style import Style
 
+from calculator import Calculator
 from grapher import Grapher
 
 GRAPHS_DIR = 'graphs/'
@@ -404,6 +405,9 @@ def main():
     graphs = create_graphs(i_df, e_df, args.start_date, args.end_date, args.category)
 
     create_web_page(graphs)
+
+    calculator = Calculator()
+    calculator.create_df()
 
 if __name__ == "__main__":
     main()
