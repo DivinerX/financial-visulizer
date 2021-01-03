@@ -406,8 +406,5 @@ def main():
 
     create_web_page(graphs)
 
-    calculator = Calculator()
-    calculator.create_df()
-
 if __name__ == "__main__":
     main()
