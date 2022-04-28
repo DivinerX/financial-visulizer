@@ -3,20 +3,21 @@ import json
 import pandas as pd
 
 
-def create_data_frame(bank, configs):
+def create_data_frame(configs):
     files = configs['files']
     keep_columns = configs['keep_data_from']
     # https://dev.to/balapriya/building-a-dataframe-from-multiple-files-1590
     # The [keep_columns] after read_csv reorders the header to match keep_columns.
-    df = pd.concat((pd.read_csv(f, usecols=keep_columns, parse_dates=[keep_columns[0]])[keep_columns] for f in files), ignore_index=True)
+    df = pd.concat((pd.read_csv(f, parse_dates=[keep_columns[0]])[keep_columns] for f in files), ignore_index=True)
+
+    df.columns = ['Date', 'Description', 'Amount']
 
     if option_enabled(configs, 'format', 'reverse_sign', 'true'):
-        df[keep_columns[2]] = df[keep_columns[2]] * -1
+        df['Amount'] = df['Amount'] * -1
 
     if 'exceptions' in configs:
-        df = remove_exceptions(configs['exceptions'], df, keep_columns[1])
+        df = remove_exceptions(configs['exceptions'], df, 'Description')
 
-    print(df)
     return df
 
 def option_enabled(configs_dict, section, option, value):
@@ -34,6 +35,11 @@ def remove_exceptions(exceptions, df, description_column):
             df = df[~df[description_column].str.contains(line.strip())]
     # Reset out of order index column and return.
     return df.reset_index(drop=True)
+
+def combine_dataframes(dataframes):
+    df = pd.concat(dataframes, ignore_index=True)
+    return df
+
 
 @staticmethod
 def get_json_from_file(filename):

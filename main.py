@@ -1,6 +1,6 @@
 import argparse
 
-from new_organize import create_data_frame, get_json_from_file
+from new_organize import combine_dataframes, create_data_frame, get_json_from_file
 
 
 def get_args():
@@ -14,7 +14,8 @@ def main():
     configs = get_json_from_file(args.file)
     dataframes = []
     for account in configs:
-        dataframes.append(create_data_frame(account, configs[account]))
+        dataframes.append(create_data_frame(configs[account]))
+    print(combine_dataframes(dataframes))
 
 if __name__ == '__main__':
     main()
