@@ -32,14 +32,17 @@ def remove_exceptions(exceptions, df, description_column):
         for line in f:
             # Print row containing exception without the header or index column.
             print(df[df[description_column].str.contains(line.strip())].to_string(index=False, header=False))
+            # Remove row containing exception.
             df = df[~df[description_column].str.contains(line.strip())]
     # Reset out of order index column and return.
     return df.reset_index(drop=True)
 
-def combine_dataframes(dataframes):
-    df = pd.concat(dataframes, ignore_index=True)
-    return df
-
+def separate_expenses_and_income(dataframes_list):
+    df = pd.concat(dataframes_list, ignore_index=True)
+    expenses, income = df[(mask:=df['Amount'] <= 0)].copy(), df[~mask].copy()
+    expenses = expenses.sort_values(by='Date', ignore_index=True)
+    income = income.sort_values(by='Date', ignore_index=True)
+    return expenses, income
 
 @staticmethod
 def get_json_from_file(filename):
