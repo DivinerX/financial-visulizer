@@ -1,7 +1,9 @@
 import json
+import os
 
 import pandas as pd
 
+from categories import E_CATEGORIES, I_CATEGORIES
 
 def create_data_frame(configs):
     files = configs['files']
@@ -43,6 +45,25 @@ def separate_expenses_and_income(dataframes_list):
     expenses = expenses.sort_values(by='Date', ignore_index=True)
     income = income.sort_values(by='Date', ignore_index=True)
     return expenses, income
+
+def categorize_data(df, finance_type):
+    if finance_type == 'expenses':
+        categories = E_CATEGORIES
+    elif finance_type == 'income':
+        categories = I_CATEGORIES
+    else:
+        print('Invalid finance type given')
+    
+    columns = df.columns.tolist()
+    for index, row in df.iterrows():
+        os.system('clear')
+        print(f'{columns} - {index}')
+        print(f'{row[columns[0]].strftime("%Y-%m-%d")}, "{row[columns[1]]}", ${row[columns[2]]}')
+        print(categories)
+        get_user_input()
+
+def get_user_input():
+    input('Select a category: ')
 
 @staticmethod
 def get_json_from_file(filename):

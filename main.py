@@ -1,6 +1,6 @@
 import argparse
 
-from new_organize import create_data_frame, get_json_from_file, separate_expenses_and_income
+from new_organize import categorize_data, create_data_frame, get_json_from_file, separate_expenses_and_income
 
 
 def get_args():
@@ -16,7 +16,8 @@ def main():
     for account in configs:
         dataframes.append(create_data_frame(configs[account]))
     expenses, income = separate_expenses_and_income(dataframes)
-    print(f'{expenses}\n{income}')
+    # print(f'{expenses}\n{income}')
+    detailed_income = categorize_data(income, 'income')
 
 if __name__ == '__main__':
     main()
