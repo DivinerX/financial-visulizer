@@ -16,8 +16,9 @@ def main():
     for account in configs:
         dataframes.append(create_data_frame(configs[account]))
     expenses, income = separate_expenses_and_income(dataframes)
-    # print(f'{expenses}\n{income}')
+    print(f'{expenses}\n{income}')
     detailed_income = categorize_data(income, 'income')
+    detailed_income = categorize_data(expenses, 'expenses')
 
 if __name__ == '__main__':
     main()
