@@ -66,12 +66,26 @@ def categorize_data(df, finance_type):
         sys.exit(3)
     
     columns = df.columns.tolist()
+    user_categories = []
+    to_from_list = []
+    updated_descriptions = []
+
     for index, row in df.iterrows():
         print(f'{columns} - {index}')
         print(f'{row[columns[0]].strftime("%Y-%m-%d")}, ${row[columns[1]]}, "{row[columns[2]]}"')
         print(categories)
         category, to_from, user_description = get_user_input(categories, to_from_category)
+        user_categories.append(category)
+        to_from_list.append(to_from)
+        updated_descriptions.append(user_description)
         os.system('clear')
+    
+    df = df.rename(columns={'Amount': rename_amount_column_to})
+    df.insert(2, 'Category', user_categories, allow_duplicates=True)
+    df.insert(3, to_from_category, to_from_list, allow_duplicates=True)
+    df['Description'] = updated_descriptions
+
+    return df
 
 def get_user_input(categories, to_from_category):
     category = input('Select a category: ')
@@ -84,8 +98,7 @@ def get_user_input(categories, to_from_category):
 
     user_description = input('(Optional) Description: ')
 
-    return category, to_from, user_description
-    
+    return categories[int(category)], to_from, user_description
 
 def good_category(category, categories):
     return category.isdigit() and int(category) in categories

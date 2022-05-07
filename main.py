@@ -18,7 +18,8 @@ def main():
     expenses, income = separate_expenses_and_income(dataframes)
     print(f'{expenses}\n{income}')
     detailed_income = categorize_data(income, 'income')
-    detailed_income = categorize_data(expenses, 'expenses')
+    detailed_expenses = categorize_data(expenses, 'expenses')
+    print(detailed_income)
 
 if __name__ == '__main__':
     main()
