@@ -1,12 +1,5 @@
 env/
 __pycache__/
 *.pyc
-
-expense*
-income*
-*.backup
 *.csv
-*.svg
-Test*
-
-index.html
+.DS_Store
