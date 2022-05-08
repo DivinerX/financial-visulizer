@@ -1,0 +1,58 @@
+{
+    "finance_files": {
+        "bank1": {
+            "files": [
+                "path/to/file.csv"
+            ],
+            "keep_data_from": [
+                "Date",
+                "Desc",
+                "Amount"
+            ]
+        },
+        "bank2": {
+            "files": [
+                "/absolute/path.CSV"
+            ],
+            "keep_data_from": [
+                "Day",
+                "Description",
+                "Debit"
+            ],
+            "format": {
+                "reverse_sign": "true"
+            }
+        },
+        "bank3": {
+            "files": [
+                "first_file.csv",
+                "second_file.csv"
+            ],
+            "keep_data_from": [
+                "Posted",
+                "Long Description",
+                "Amount"
+            ],
+            "exceptions": "testExceptions"
+        },
+        "bank4": {
+            "files": [
+                "transactions.CSV",
+                "more_transactions.csv"
+            ],
+            "keep_data_from": [
+                "Date",
+                "Desc",
+                "Amount"
+            ],
+            "format": {
+                "reverse_sign": "true"
+            },
+            "exceptions": "testExceptions"
+        }
+    },
+    "out_files": {
+        "income_file": "nonexistent_directory/income.csv",
+        "expenses_file": "/existing/absolute/dir/expenses.csv"
+    }
+}
