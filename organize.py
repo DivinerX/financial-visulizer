@@ -1,250 +1,116 @@
-import argparse
-import csv
+import json
 import os
 import sys
+from pathlib import Path
 
-import numpy as np
-import pandas.errors
 import pandas as pd
 
 from categories import E_CATEGORIES, I_CATEGORIES
 
-# Terminal color codes.
-BOLD = '\033[1m'
-RESET = '\x1b[0m'
 
+def create_data_frame(configs):
+    files = configs['files']
+    keep_columns = configs['keep_data_from']
+    # https://dev.to/balapriya/building-a-dataframe-from-multiple-files-1590
+    # The [keep_columns] after read_csv reorders the header to match keep_columns.
+    df = pd.concat((pd.read_csv(f, parse_dates=[keep_columns[0]])[keep_columns] for f in files), ignore_index=True)
 
-def organize_data(exceptions_file, *args):
-    raw_df = read_files(*args)
+    # Rename columns to standard names.
+    df.columns = ['Date', 'Description', 'Amount']
+    # Switch order of columns.
+    df = df[['Date', 'Amount', 'Description']]
 
-    if DEBUG:
-        # Can't use a starred expression in fstrings so I used format this time.
-        print('Files given: {}'.format(*args))
-        print(f'Raw dataframe:\n{raw_df}\n')
+    if option_enabled(configs, 'format', 'reverse_sign', 'true'):
+        df['Amount'] = df['Amount'] * -1
 
-    filtered_df = remove_exceptions(exceptions_file, raw_df)
-    trimmed_df = pd.DataFrame(filtered_df, columns = ['Posting Date', 'Amount',
-                              'Extended Description'])
-    if DEBUG:
-        print(f'Trimmed dataframe:\n{trimmed_df}\n')
-
-    income = organize_income(trimmed_df)
-    expenses = organize_expenses(trimmed_df)
-
-    # Get the user to fill out 'Category', 'To/From', and 'Description' columns.
-    income = fill_remaining_columns(income, I_CATEGORIES)
-    expenses = fill_remaining_columns(expenses, E_CATEGORIES)
-
-    if DEBUG:
-        print(f'Final income dataframe:\n{income}\n')
-        print(f'Final expenses dataframe:\n{expenses}\n')
-
-    return income, expenses
-
-def read_files(files):
-    # Read and concatenate files into single dataframe.
-    dataframes = []
-    for file in files:
-        try:
-            df = pd.read_csv(file)
-            if {'Posting Date', 'Amount', 'Extended Description'}.issubset(df.columns):
-                dataframes.append(df)
-            else:
-                print(f'Skipping file {BOLD}{file}{RESET}, missing required ' \
-                      'column(s)')
-                continue
-        except FileNotFoundError as e:
-            print(e)
-            sys.exit(1)
-        except pandas.errors.EmptyDataError as e:
-            print(f'Skipping empty file {BOLD}{file}{RESET}')
-
-    if not dataframes:
-        print('Exiting, no usable files')
-        sys.exit(2)
-
-    return pd.concat(dataframes)
-
-def remove_exceptions(exceptions_file, raw_df):
-    exceptions = []
-    try:
-        with open(exceptions_file, newline='') as f:
-            lines = csv.reader(f)
-            iterlines = iter(lines)
-            for line in iterlines:
-                # Get the exception from each line.
-                exceptions.append(line[0].strip())
-    except (TypeError, FileNotFoundError):
-        if DEBUG:
-            print(f'No exceptions file provided.\n')
-        return raw_df
-
-    if DEBUG:
-        print(f'Exceptions: {exceptions}\n')
-
-    for exception in exceptions:
-        if DEBUG:
-            # Print the rows about to be removed from the dataframe.
-            print(raw_df[raw_df['Extended Description'].str.contains(exception)])
-        # Rewrite the dataframe with the rows containing exceptions now removed.
-        raw_df = raw_df[~raw_df['Extended Description'].str.contains(exception)]
-    return raw_df
-
-def organize_income(df):
-    # Create a deep copy of the dataframe.
-    income = df.copy()
-    # Remove all rows with negative numbers.
-    income = income[income.select_dtypes(include=[np.number]).ge(0).all(1)]
-    # Rename columns.
-    income.columns = ['Date', 'Income', 'Category']
-    income['From'] = ''
-    income['Description'] = ''
-    # Convert dates to format that pandas can work with.
-    income['Date'] = pd.to_datetime(income['Date'])
-    # Make the Date column the new index.
-    income.index = income['Date']
-    del income['Date']
-    income = income.sort_index()
-
-    if DEBUG:
-        print(f'Organized income:\n{income}\n')
-    return income
-
-def organize_expenses(expenses):
-    # Rename columns.
-    expenses.columns = ['Date', 'Expense', 'Category']
-    expenses['To'] = ''
-    expenses['Description'] = ''
-    # Convert dates to format that pandas can work with.
-    expenses['Date'] = pd.to_datetime(expenses['Date'])
-    # Make the Date column the new index.
-    expenses.index = expenses['Date']
-    del expenses['Date']
-    expenses = expenses.sort_index()
-
-    # Remove all rows with positive numbers.
-    expenses = expenses[expenses.select_dtypes(include=[np.number]).le(0).all(1)]
-
-    if DEBUG:
-        print(f'Organized expenses:\n{expenses}\n')
-    return expenses
-
-def fill_remaining_columns(df, category_dict):
-    categories = []
-    recipients = []
-    descriptions = []
-    for index, row in df.iterrows():
-        if SKIP_INPUT:
-            categories.append('NaN')
-            recipients.append('NaN')
-            descriptions.append('NaN')
-        else:
-            # Print column names.
-            print([df.index.name] + df.columns.tolist())
-            # Print single row of values.
-            print(f'[{index}, {row[0]}, {row[1]}]')
-            # Print the expense categories to choose from.
-            print(category_dict)
-            # Get user input to fill in the remaining columns.
-            get_input(df, category_dict, categories, recipients, descriptions)
-    # Add lists to the dataframe.
-    df = df.assign(Category=categories)
-    if list(df.columns)[0] == 'Expense':
-        df = df.assign(To=recipients)
-    else:
-        df = df.assign(From=recipients)
-    df = df.assign(Description=descriptions)
-
-    if DEBUG:
-        print(f'Entered categories:\n{categories}\n')
+    if 'exceptions' in configs:
+        df = remove_exceptions(configs['exceptions'], df, 'Description')
 
     return df
 
-def get_input(df, category_dict, categories, recipients, descriptions):
-    category = input('Enter a category: ')
-    while not good_category(category, category_dict):
-        category = input('Invalid category. Please choose one of the ' \
-                         'numbers listed: ')
-    categories.append(category_dict[int(category)])
-    # Get the third column name, it'll either be 'To' or 'From'.
-    to_from = input(f'{df.columns[2]}: ')
-    # While the input is an empty string or whitespace, ask for input again.
-    while to_from == '' or to_from.isspace():
-        to_from = input('Please enter a value, any value: ')
-    recipients.append(to_from)
-    descriptions.append(input('(Optional) Description: '))
-    # Clear the screen between each iteration.
-    os.system('clear')
+def option_enabled(configs_dict, section, option, value):
+    if section in configs_dict:
+        if option in configs_dict[section]:
+            if configs_dict[section][option].lower() == value:
+                return True
+    return False
 
-def good_category(category, category_dict):
-    return category.isdigit() and int(category) in category_dict.keys()
+def remove_exceptions(exceptions, df, description_column):
+    with open(exceptions, 'r') as f:
+        for line in f:
+            # Print row containing exception without the header or index column.
+            print('Removed ' + df[df[description_column].str.contains(line.strip())].to_string(index=False, header=False))
+            # Remove row containing exception.
+            df = df[~df[description_column].str.contains(line.strip())]
+    # Print newline.
+    print('')
+    # Reset out of order index column and return.
+    return df.reset_index(drop=True)
 
-def write_file(df, file_path, write_mode):
-    header = None
-    # Create df header to check if it already exists in file.
-    columns = df.index.name
-    for column in list(df.columns.values):
-        columns += ',' + column
+def separate_expenses_and_income(dataframes_list):
+    df = pd.concat(dataframes_list, ignore_index=True)
+    expenses, income = df[(mask:=df['Amount'] <= 0)].copy(), df[~mask].copy()
+    expenses = expenses.sort_values(by='Date', ignore_index=True)
+    income = income.sort_values(by='Date', ignore_index=True)
+    return expenses, income
 
-    # If the file doesn't exist, write the header.
-    if not os.path.isfile(file_path):
-        header=True
+def categorize_data(df, finance_type):
+    if finance_type == 'expenses':
+        categories = E_CATEGORIES 
+        to_from_category = 'To'
+        rename_amount_column_to = 'Expense'
+    elif finance_type == 'income':
+        categories = I_CATEGORIES
+        to_from_category = 'From'
+        rename_amount_column_to = 'Income'
     else:
-        # Check if write mode has 'w' and if first line of file equals header.
-        with open(file_path) as f:
-            first_line = f.readline().strip()
-            if 'w' not in write_mode and first_line == columns:
-                header=False
-            else:
-                header=True
+        print('Invalid finance type given')
+        sys.exit(3)
+    
+    columns = df.columns.tolist()
+    user_categories = []
+    to_from_list = []
+    updated_descriptions = []
 
-    # Only write to file if the dataframe is not empty.
-    if len(df.index) != 0:
-        df.to_csv(path_or_buf=file_path, header=header, mode=write_mode)
-        print(f'{list(df.columns)[0]} dataframe written in "{write_mode}" ' \
-              f'mode to {BOLD}{file_path}{RESET}')
-    else:
-        print(f'{BOLD}Not{RESET} writing empty dataframe to {file_path}.')
+    for index, row in df.iterrows():
+        print(f'{columns} - {rename_amount_column_to} {index}')
+        print(f'{row[columns[0]].strftime("%Y-%m-%d")}, ${row[columns[1]]}, "{row[columns[2]]}"')
+        print(categories)
+        category, to_from, user_description = get_user_input(categories, to_from_category)
+        user_categories.append(category)
+        to_from_list.append(to_from)
+        updated_descriptions.append(user_description)
+        os.system('clear')
+    
+    df = df.rename(columns={'Amount': rename_amount_column_to})
+    df.insert(2, 'Category', user_categories, allow_duplicates=True)
+    df.insert(3, to_from_category, to_from_list, allow_duplicates=True)
+    df['Description'] = updated_descriptions
 
-def main():
-    parser = argparse.ArgumentParser(description='Organize raw finances.')
-    parser.add_argument('files', nargs='+',
-                        help='CSV file(s) containing finances, required ' \
-                        'columns are "Posting Date", "Amount", "Extended ' \
-                        'Description"; if any one of these columns is missing' \
-                        ' the whole CSV it belongs to is ignored')
-    parser.add_argument('-d', '--debug', action='store_true', help='enable ' \
-                        'debug output')
-    parser.add_argument('-e', '--exceptions', help='a file of newline ' \
-                        'separated strings that if found will get ' \
-                        'removed from the data')
-    parser.add_argument('-i', '--income_file', default='income.csv',
-                        help='path where income CSV file will be written to, ' \
-                        ' default is "income.csv"')
-    parser.add_argument('-x', '--expenses_file', default='expenses.csv',
-                        help='path where expenses CSV file will be written ' \
-                        'to, default is "expenses.csv"')
-    parser.add_argument('-w', '--write_mode', default='a',help='write mode ' \
-                        'for both the income and expenses CSV, default is "a"')
-    parser.add_argument('-s', '--skip_input', action='store_true',
-                        help='auto fill user input step with bogus data for ' \
-                        'quicker debugging')
+    return df
 
-    args = parser.parse_args()
-    global DEBUG
-    DEBUG = args.debug
+def get_user_input(categories, to_from_category):
+    category = input('Select a category: ')
+    while not good_category(category, categories):
+        category = input('Invalid, select a category: ')
 
-    global SKIP_INPUT
-    SKIP_INPUT = args.skip_input
+    to_from = input(f'{to_from_category}: ').strip()
+    while not to_from:
+        to_from = input(f'Entry can\'t be empty, {to_from_category}: ').strip()
 
-    assert args.income_file != '' and not args.income_file.isspace()
-    assert args.expenses_file != '' and not args.expenses_file.isspace()
-    assert args.write_mode != '' and not args.write_mode.isspace()
+    user_description = input('(Optional) Description: ')
 
-    income, expenses = organize_data(args.exceptions, args.files)
+    return categories[int(category)], to_from, user_description
 
-    write_file(income, args.income_file, args.write_mode)
-    write_file(expenses, args.expenses_file, args.write_mode)
+def good_category(category, categories):
+    return category.isdigit() and int(category) in categories
 
-if __name__ == "__main__":
-    main()
+def write_final_df_to_file(df, path):
+    filepath = Path(path)
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(path_or_buf=filepath, index=False)
+
+@staticmethod
+def get_json_from_file(filename):
+    with open(filename, 'r') as f:
+        return json.load(f)
