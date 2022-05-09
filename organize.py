@@ -19,6 +19,8 @@ def create_data_frame(configs):
     df.columns = ['Date', 'Description', 'Amount']
     # Switch order of columns.
     df = df[['Date', 'Amount', 'Description']]
+    # Remove time from datetime objects.
+    df['Date'] = pd.to_datetime(df['Date']).dt.date
 
     if option_enabled(configs, 'format', 'reverse_sign', 'true'):
         df['Amount'] = df['Amount'] * -1
@@ -74,7 +76,7 @@ def categorize_data(df, finance_type):
 
     for index, row in df.iterrows():
         print(f'{columns} - {rename_amount_column_to} {index}')
-        print(f'{row[columns[0]].strftime("%Y-%m-%d")}, ${row[columns[1]]}, "{row[columns[2]]}"')
+        print(f'{row[columns[0]]}, ${row[columns[1]]}, "{row[columns[2]]}"')
         print(categories)
         category, to_from, user_description = get_user_input(categories, to_from_category)
         user_categories.append(category)
