@@ -17,7 +17,7 @@ def main():
     for account in configs['finance_data']:
         dataframes.append(create_data_frame(configs['finance_data'][account]))
     expenses, income = separate_expenses_and_income(dataframes)
-    print(f'{expenses}\n{income}')
+    print(f'Expenses:\n{expenses}\nIncome:\n{income}')
 
     organized_income = categorize_data(income, 'income')
     organized_expenses = categorize_data(expenses, 'expenses')
